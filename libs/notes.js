@@ -127,9 +127,7 @@
     el._body = h('div', 'sn-body', el);
     el._text = h('div', 'sn-text', el._body);
     el._ink = d.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    el._ink.setAttribute('class', 'sn-ink');
-    el._ink.setAttribute('viewBox', '0 0 1000 1000');
-    el._ink.setAttribute('preserveAspectRatio', 'none');
+    el._ink.setAttribute('class', 'sn-ink'); el._ink.setAttribute('viewBox', '0 0 1000 1000'); el._ink.setAttribute('preserveAspectRatio', 'none');
     el._body.appendChild(el._ink);
 
     var tools = h('div', 'sn-tools', el);
@@ -203,10 +201,8 @@
     if (OVERLAY && collapsed) {
       // Stapel: jeder Zettel klein auf dem Stapel-Knopf, leicht verdreht und versetzt
       var b = toggle.getBoundingClientRect();
-      el.style.left = b.left + ((rank * 3) % 5) - 2 + 'px';
-      el.style.top = b.top + ((rank * 7) % 5) - 2 + 'px';
-      el.style.width = b.width + 'px';
-      el.style.height = b.height + 'px';
+      el.style.left = b.left + ((rank * 3) % 5) - 2 + 'px'; el.style.top = b.top + ((rank * 7) % 5) - 2 + 'px';
+      el.style.width = b.width + 'px'; el.style.height = b.height + 'px';
       el.style.zIndex = String(rank + 1);
       el.style.transform = 'rotate(' + (((rank * 37) % 15) - 7) + 'deg)';
       el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
@@ -214,10 +210,8 @@
     } else if (OVERLAY) {
       var g = geometry(n);
       el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
-      el.style.left = g.left + 'px';
-      el.style.top = g.top + 'px';
-      el.style.width = g.pw + 'px';
-      el.style.height = g.ph + 'px';
+      el.style.left = g.left + 'px'; el.style.top = g.top + 'px';
+      el.style.width = g.pw + 'px'; el.style.height = g.ph + 'px';
       el.style.zIndex = String(rank + 1);
       // Beim Bearbeiten gerade: so stimmen Zeiger und Linien überein
       el.style.transform = isActive ? '' : 'rotate(' + (n.rot || 0) + 'deg)';
@@ -284,18 +278,31 @@
     target.addEventListener('pointercancel', end);
   }
 
+  // Ziehen und Größe ändern fassen nur den einen Zettel an, einmal je Bild: beim Ziehen allein seine transform
+  // (läuft ohne neues Layout), nicht das ganze Brett. Sonst ruckelt es über der Flutter-Fläche der Visu.
   function startDrag(ev, el, id) {
-    var n = find(id), g = geometry(n), sx = ev.clientX, sy = ev.clientY, moved = false;
+    var n = find(id), g = geometry(n), sx = ev.clientX, sy = ev.clientY, moved = false, frame = 0;
+    var left = g.left, top = g.top, rot = active === id ? 0 : (n.rot || 0);
     gesture = id;
     follow(el._body, ev, function (e) {
       var dx = e.clientX - sx, dy = e.clientY - sy;
       if (!OVERLAY || (!moved && Math.abs(dx) + Math.abs(dy) < 7)) return;
-      moved = true;
-      n.x = clamp((g.left + dx + g.pw / 2) / g.W, 0, 1);
-      n.y = clamp((g.top + dy + g.ph / 2) / g.H, 0, 1);
-      render();
+      if (!moved) { moved = true; el.style.willChange = 'transform'; }
+      left = clamp(g.left + dx, 4, g.W - g.pw - 4);
+      top = clamp(g.top + dy, 4, g.H - g.ph - 4);
+      if (frame) return;
+      frame = w.requestAnimationFrame(function () {
+        frame = 0;
+        el.style.transform = 'translate3d(' + (left - g.left) + 'px,' + (top - g.top) + 'px,0) rotate(' + rot + 'deg)';
+      });
     }, function () {
-      if (moved) touch(n); else if (active !== id) activate(id);
+      w.cancelAnimationFrame(frame);
+      el.style.willChange = '';
+      if (!moved) { if (active !== id) activate(id); return; }
+      n.x = clamp((left + g.pw / 2) / g.W, 0, 1);
+      n.y = clamp((top + g.ph / 2) / g.H, 0, 1);
+      touch(n);
+      render();
     });
   }
 
@@ -303,17 +310,27 @@
     if (ev.button) return;
     ev.preventDefault();
     ev.stopPropagation();
-    var n = find(id), g = geometry(n), sx = ev.clientX, sy = ev.clientY;
+    var n = find(id), g = geometry(n), sx = ev.clientX, sy = ev.clientY, pw = g.pw, ph = g.ph, frame = 0;
     gesture = id;
     follow(ev.currentTarget, ev, function (e) {
-      var pw = clamp(g.pw + e.clientX - sx, MIN_PX, g.W - g.left - 4), ph = clamp(g.ph + e.clientY - sy, MIN_PX, g.H - g.top - 4);
+      pw = clamp(g.pw + e.clientX - sx, MIN_PX, g.W - g.left - 4);
+      ph = clamp(g.ph + e.clientY - sy, MIN_PX, g.H - g.top - 4);
+      if (frame) return;
+      frame = w.requestAnimationFrame(function () {
+        frame = 0;
+        el.style.width = pw + 'px';
+        el.style.height = ph + 'px';
+      });
+    }, function () {
+      w.cancelAnimationFrame(frame);
       n.w = clamp(pw / g.m, 0.08, 0.9);
       n.h = clamp(ph / g.m, 0.08, 0.9);
       // Die obere linke Ecke bleibt stehen
       n.x = clamp((g.left + pw / 2) / g.W, 0, 1);
       n.y = clamp((g.top + ph / 2) / g.H, 0, 1);
+      touch(n);
       render();
-    }, function () { touch(n); });
+    });
   }
 
   function startStroke(ev, el, id) {
@@ -327,12 +344,14 @@
     n.strokes.push(stroke);
     gesture = id;
     paintInk(el, n);
+    // Beim Schreiben wächst nur die eine Linie, die anderen bleiben unberührt
+    var line = el._ink.lastChild, path = line.getAttribute('d');
     follow(el._body, ev, function (e) {
       var p = point(e), len = stroke.p.length;
       if (len >= MAX_POINTS || Math.abs(p[0] - stroke.p[len - 2]) + Math.abs(p[1] - stroke.p[len - 1]) < 5) return;
       stroke.p.push(p[0], p[1]);
-      paintInk(el, n);
-    }, function () { touch(n); });
+      line.setAttribute('d', path += 'L' + p[0] + ' ' + p[1]);
+    }, function () { el._inkKey = ''; touch(n); render(); });
   }
 
   function activate(id) {
@@ -348,9 +367,7 @@
   function closeEditor() {
     var el = els[active];
     if (!el || !el._ta) return;
-    el._ta.remove();
-    el._ta = null;
-    el._text.style.display = '';
+    el._ta.remove(); el._ta = null; el._text.style.display = '';
   }
 
   function setMode(next) {
@@ -454,7 +471,8 @@
       if ((dirty[n.id] || active === n.id) && !next.some(function (m) { return m.id === n.id; })) next.push(n);
     });
     notes = next;
-    render();
+    // Mitten in einer Geste nicht neu zeichnen: das setzte die transform des gezogenen Zettels zurück; das Ende der Geste zeichnet
+    if (!gesture) render();
   }
 
   if (OVERLAY) {
