@@ -39,7 +39,10 @@
     + 'border-radius:2px 2px 12px 2px;box-shadow:0 8px 18px rgba(0,0,0,.28),0 1px 3px rgba(0,0,0,.22)}'
     + '.sn-tile .sn-note{position:relative;flex:0 0 auto;width:min(150px,calc(50% - 6px));aspect-ratio:1;cursor:pointer}'
     + '.sn-tile .sn-note.sn-active{position:fixed;width:auto;aspect-ratio:auto;z-index:5;transform:none!important}'
-    + '.sn-collapsed .sn-note{display:none}'
+    // Eingeklappt liegen die Zettel als kleiner Stapel auf dem Stapel-Knopf; der Knopf darüber bleibt die Tippfläche
+    + '.sn-collapsed .sn-note{pointer-events:none;box-shadow:0 2px 5px rgba(0,0,0,.3);border-radius:1px 1px 5px 1px}'
+    + '.sn-fly .sn-note{transition:left .5s cubic-bezier(.3,.9,.3,1),top .5s cubic-bezier(.3,.9,.3,1),width .5s cubic-bezier(.3,.9,.3,1),height .5s cubic-bezier(.3,.9,.3,1),transform .5s,border-radius .5s,box-shadow .5s}'
+    + '.sn-pile .sn-toggle{background:none;box-shadow:none;opacity:1}.sn-pile .sn-toggle svg{visibility:hidden}'
     + '.sn-body{position:absolute;inset:0;overflow:hidden;container-type:size;border-radius:inherit}'
     + '.sn-body::before{content:"";position:absolute;left:0;right:0;top:0;height:13%;background:rgba(0,0,0,.045)}'
     + '.sn-text,.sn-edit{position:absolute;left:7cqw;right:7cqw;top:15cqh;bottom:6cqh;margin:0;padding:0;border:0;background:none;outline:none;resize:none;'
@@ -104,10 +107,11 @@
   var pad = h('div', 'sn-pad sn-c' + (OVERLAY ? C.corner : 3), root), count = null;
   button(pad, 'sn-p', L('New note'), ICONS.plus, addNote);
   if (OVERLAY) {
-    var toggle = button(pad, 'sn-p', L('Show or hide notes'), ICONS.stack, function () {
+    var toggle = button(pad, 'sn-p sn-toggle', L('Show or hide notes'), ICONS.stack, function () {
+      if (active) deactivate();
       collapsed = !collapsed;
       store('collapsed', collapsed ? '1' : '0');
-      if (collapsed && active) deactivate();
+      fly();
       render();
     });
     count = h('b', '', toggle);
@@ -177,6 +181,14 @@
     return { W: W, H: H, m: m, pw: pw, ph: ph, left: clamp(n.x * W - pw / 2, 4, W - pw - 4), top: clamp(n.y * H - ph / 2, 4, H - ph - 4) };
   }
 
+  /** Für einen Moment gleiten die Zettel an ihren neuen Platz (Stapel oder Brett), statt zu springen. */
+  var flyTimer = 0;
+  function fly() {
+    root.classList.add('sn-fly');
+    w.clearTimeout(flyTimer);
+    flyTimer = w.setTimeout(function () { root.classList.remove('sn-fly'); }, 900);
+  }
+
   function paint(el, n, rank) {
     var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow;
     el.style.background = 'linear-gradient(180deg,' + pair[0] + ',' + pair[1] + ')';
@@ -188,8 +200,20 @@
     el._colorB.firstChild.style.background = COLORS[COLOR_KEYS[(COLOR_KEYS.indexOf(n.color) + 1) % COLOR_KEYS.length]][1];
     if (el._text.textContent !== n.text) el._text.textContent = n.text;
     paintInk(el, n);
-    if (OVERLAY) {
+    if (OVERLAY && collapsed) {
+      // Stapel: jeder Zettel klein auf dem Stapel-Knopf, leicht verdreht und versetzt
+      var b = toggle.getBoundingClientRect();
+      el.style.left = b.left + ((rank * 3) % 5) - 2 + 'px';
+      el.style.top = b.top + ((rank * 7) % 5) - 2 + 'px';
+      el.style.width = b.width + 'px';
+      el.style.height = b.height + 'px';
+      el.style.zIndex = String(rank + 1);
+      el.style.transform = 'rotate(' + (((rank * 37) % 15) - 7) + 'deg)';
+      el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
+      el.classList.remove('sn-below');
+    } else if (OVERLAY) {
       var g = geometry(n);
+      el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
       el.style.left = g.left + 'px';
       el.style.top = g.top + 'px';
       el.style.width = g.pw + 'px';
@@ -237,6 +261,7 @@
       if (active === id) { active = null; mode = ''; }
     });
     root.classList.toggle('sn-collapsed', collapsed);
+    root.classList.toggle('sn-pile', collapsed && notes.length > 0);
     root.classList.toggle('sn-empty', !notes.length);
     if (count) count.textContent = notes.length ? String(notes.length) : '';
   }
@@ -361,6 +386,7 @@
   function addNote() {
     if (notes.length >= C.max) return hint(L('The board is full'));
     if (active) deactivate();
+    if (collapsed) fly();
     collapsed = false;
     store('collapsed', '0');
     var r = Math.random, bytes = new Uint8Array(4), id = '';
