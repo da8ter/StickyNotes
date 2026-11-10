@@ -1,0 +1,34 @@
+{
+    "elements": [
+        {
+            "type": "CheckBox",
+            "name": "Overlay",
+            "caption": "Show notes on top of the visualization (needs the browser extension)"
+        },
+        {
+            "type": "Select",
+            "name": "Corner",
+            "caption": "Corner of the note pad",
+            "options": [
+                { "caption": "Top left", "value": 0 },
+                { "caption": "Top right", "value": 1 },
+                { "caption": "Bottom left", "value": 2 },
+                { "caption": "Bottom right", "value": 3 }
+            ]
+        },
+        {
+            "type": "NumberSpinner",
+            "name": "PollSeconds",
+            "caption": "Check for changes every",
+            "suffix": "s",
+            "minimum": 1,
+            "maximum": 60
+        }
+    ],
+    "actions": [
+        {
+            "type": "Label",
+            "caption": "Notes float on top of the visualization when the browser extension \"Visu-Erweiterung für Symcon\" is connected with the address below (put your server address in front). Without the extension, the tile shows the notes as a board."
+        }
+    ]
+}

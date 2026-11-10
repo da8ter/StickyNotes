@@ -1,0 +1,12 @@
+{
+    "id": "{00FEAA3B-BDCA-4100-AC2A-90A534D4A3C8}",
+    "name": "Sticky Notes",
+    "author": "Stephan Sprick",
+    "url": "https://github.com/da8ter/StickyNotes",
+    "compatibility": {
+        "version": "8.1"
+    },
+    "version": "1.0",
+    "build": 1,
+    "date": 0
+}

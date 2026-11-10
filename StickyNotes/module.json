@@ -1,0 +1,12 @@
+{
+    "id": "{C7F01A5C-29CE-4EB0-92F8-B2E2379CE3E3}",
+    "name": "Sticky Notes",
+    "type": 3,
+    "vendor": "",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "STICKY",
+    "url": "https://github.com/da8ter/StickyNotes/blob/main/StickyNotes/README.md"
+}
