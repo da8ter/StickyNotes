@@ -18,7 +18,7 @@ final class NoteStore
     // Der Hook liefert höchstens 1 MiB aus: die ganze Liste muss darunter bleiben
     public const MAX_STORE_BYTES = 700000;
     public const COLORS = ['yellow', 'pink', 'green', 'blue'];
-    public const PENS = 3;
+    public const PENS = 6;
     // Die zwei Teile eines Zettels: Kachel und Visu speichern nur den, den sie geändert haben
     private const PARTS = ['place' => ['x', 'y', 'w', 'h', 'rot', 'z'], 'content' => ['text', 'color', 'strokes']];
 

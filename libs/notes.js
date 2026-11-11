@@ -17,7 +17,7 @@
   var OVERLAY = C.mode === 'overlay';
   var COLORS = { yellow: ['#fff48f', '#ffe95c'], pink: ['#ffc4dd', '#ff9fc6'], green: ['#d0f5a9', '#b4ea7e'], blue: ['#bfe6ff', '#96d2fb'] };
   var COLOR_KEYS = Object.keys(COLORS);
-  var PENS = ['#1f2933', '#d7263d', '#1b5fd1'];
+  var PENS = ['#1f2933', '#d7263d', '#1b5fd1', '#1a8f3c', '#f08a00', '#8a2be2'];
   var MIN_PX = 90, MAX_STROKES = 400, MAX_POINTS = 2000;
   var L = function (text) { return (C.labels && C.labels[text]) || text; };
   var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
@@ -53,11 +53,11 @@
     + '.sn-ink path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:max(1.5px,1.5cqh);vector-effect:non-scaling-stroke}'
     + '.sn-draw{cursor:crosshair}'
     + '.sn-tools{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:none;gap:2px;padding:4px;border-radius:24px;'
-    + 'background:rgba(28,28,30,.94);box-shadow:0 6px 16px rgba(0,0,0,.35);white-space:nowrap;z-index:3}'
+    + 'background:rgba(28,28,30,.94);box-shadow:0 6px 16px rgba(0,0,0,.35);flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 16px);z-index:3}'
     + '.sn-active .sn-tools{display:flex}.sn-below .sn-tools{bottom:auto;top:calc(100% + 8px)}'
     + '.sn-tile .sn-tools,.sn-tile .sn-below .sn-tools{top:auto;bottom:10px}'
     + '.sn-b{width:38px;height:38px;border-radius:50%;border:0;padding:0;background:none;color:#fff;font:600 14px/1 inherit;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation}'
-    + '.sn-b svg{width:19px;height:19px}.sn-b.sn-on{background:rgba(255,255,255,.24)}.sn-b.sn-arm{background:#d7263d}'
+    + '.sn-b svg{width:19px;height:19px}.sn-pen{width:28px}.sn-b.sn-on{background:rgba(255,255,255,.24)}.sn-b.sn-arm{background:#d7263d}'
     + '.sn-b i{display:block;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.55)}.sn-b.sn-on i{border-color:#fff}'
     + '.sn-only-draw{display:none}.sn-draw .sn-only-draw{display:flex}'
     + '.sn-grip{position:absolute;right:-8px;bottom:-8px;width:34px;height:34px;display:none;cursor:nwse-resize;touch-action:none;z-index:2}'
@@ -132,7 +132,7 @@
     el._type = button(tools, 'sn-b', L('Type'), 'Aa', function () { setMode('text'); });
     el._drawB = button(tools, 'sn-b', L('Write by hand'), ICONS.pen, function () { setMode('draw'); });
     el._pens = PENS.map(function (color, i) {
-      var b = button(tools, 'sn-b sn-only-draw', L('Pen color'), '<i></i>', function () { pen = i; render(); });
+      var b = button(tools, 'sn-b sn-pen sn-only-draw', L('Pen color'), '<i></i>', function () { pen = i; render(); });
       b.firstChild.style.background = color;
       return b;
     });
