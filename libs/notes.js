@@ -27,7 +27,7 @@
   };
 
   var notes = [], seq = -1, els = {}, active = null, mode = '', pen = 0, gesture = null;
-  var dirty = {}, timers = {}, collapsed = OVERLAY && store('collapsed') === '1';
+  var dirty = {}, parts = {}, timers = {}, collapsed = OVERLAY && store('collapsed') === '1';
   var lastColor = COLORS[store('color')] ? store('color') : 'yellow';
 
   // ── Aufbau ──
@@ -71,9 +71,7 @@
     + '.sn-p b:empty{display:none}.sn-p:active,.sn-b:active{transform:scale(.93)}'
     + '.sn-hint{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);padding:8px 14px;border-radius:12px;background:rgba(28,28,30,.94);color:#fff;font-size:14px;pointer-events:none;white-space:nowrap}'
     + '.sn-none{display:none;width:100%;padding-top:24px;text-align:center;opacity:.6}.sn-tile.sn-empty .sn-none{display:block}';
-  var style = d.createElement('style');
-  style.textContent = css;
-  d.head.appendChild(style);
+  h('style', '', d.head).textContent = css;
 
   function h(tag, cls, parent) { var e = d.createElement(tag); if (cls) e.className = cls; if (parent) parent.appendChild(e); return e; }
   // Feste Zeichenketten aus dieser Datei, keine Daten
@@ -85,8 +83,7 @@
   };
   function button(parent, cls, label, html, onClick) {
     var b = h('button', cls, parent);
-    b.type = 'button';
-    b.title = label;
+    b.type = 'button'; b.title = label;
     b.setAttribute('aria-label', label);
     // html ist immer eine feste Zeichenkette aus dieser Datei (Symbol, "Aa", Farbpunkt), nie Zettelinhalt
     if (html) b.innerHTML = html;
@@ -141,7 +138,7 @@
     });
     button(tools, 'sn-b sn-only-draw', L('Undo last stroke'), ICONS.undo, function () {
       var n = find(id);
-      if (n && n.strokes.length) { n.strokes.pop(); touch(n); render(); }
+      if (n && n.strokes.length) { n.strokes.pop(); touch(n, 'content'); render(); }
     });
     el._colorB = button(tools, 'sn-b', L('Note color'), '<i></i>', function () {
       var n = find(id);
@@ -149,7 +146,7 @@
       n.color = COLOR_KEYS[(COLOR_KEYS.indexOf(n.color) + 1) % COLOR_KEYS.length];
       lastColor = n.color;
       store('color', lastColor);
-      touch(n);
+      touch(n, 'content');
       render();
     });
     button(tools, 'sn-b', L('Tear off'), ICONS.trash, function (b) {
@@ -161,8 +158,7 @@
     });
     button(tools, 'sn-b', L('Done'), ICONS.done, deactivate);
 
-    var grip = h('div', 'sn-grip', el);
-    grip.addEventListener('pointerdown', function (ev) { startResize(ev, el, id); });
+    h('div', 'sn-grip', el).addEventListener('pointerdown', function (ev) { startResize(ev, el, id); });
     el._body.addEventListener('pointerdown', function (ev) {
       if (ev.button) return;
       if (active === id && mode === 'text') return; // das Textfeld bedient sich selbst
@@ -301,7 +297,7 @@
       if (!moved) { if (active !== id) activate(id); return; }
       n.x = clamp((left + g.pw / 2) / g.W, 0, 1);
       n.y = clamp((top + g.ph / 2) / g.H, 0, 1);
-      touch(n);
+      touch(n, 'place');
       render();
     });
   }
@@ -328,7 +324,7 @@
       // Die obere linke Ecke bleibt stehen
       n.x = clamp((g.left + pw / 2) / g.W, 0, 1);
       n.y = clamp((g.top + ph / 2) / g.H, 0, 1);
-      touch(n);
+      touch(n, 'place');
       render();
     });
   }
@@ -351,7 +347,7 @@
       if (len >= MAX_POINTS || Math.abs(p[0] - stroke.p[len - 2]) + Math.abs(p[1] - stroke.p[len - 1]) < 5) return;
       stroke.p.push(p[0], p[1]);
       line.setAttribute('d', path += 'L' + p[0] + ' ' + p[1]);
-    }, function () { el._inkKey = ''; touch(n); render(); });
+    }, function () { el._inkKey = ''; touch(n, 'content'); render(); });
   }
 
   function activate(id) {
@@ -360,7 +356,7 @@
     if (!n) return;
     active = id;
     mode = '';
-    if ((n.z || 0) < maxZ()) { n.z = maxZ() + 1; touch(n); }
+    if ((n.z || 0) < maxZ()) { n.z = maxZ() + 1; touch(n, 'place'); }
     render();
   }
 
@@ -382,7 +378,7 @@
       el._text.style.display = 'none';
       ta.addEventListener('input', function () {
         var current = find(active);
-        if (current) { current.text = ta.value; touch(current); }
+        if (current) { current.text = ta.value; touch(current, 'content'); }
       });
       ta.addEventListener('pointerdown', function (ev) { ev.stopPropagation(); });
       w.setTimeout(function () { ta.focus(); }, 0);
@@ -416,8 +412,7 @@
 
   function removeNote(id) {
     notes = notes.filter(function (n) { return n.id !== id; });
-    w.clearTimeout(timers[id]);
-    delete dirty[id];
+    w.clearTimeout(timers[id]); delete dirty[id]; delete parts[id];
     if (active === id) { active = null; mode = ''; }
     render();
     post({ op: 'del', id: id }).then(apply, function () { /* der nächste Abgleich holt es nach */ });
@@ -441,8 +436,10 @@
       .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
   }
 
-  function touch(n) {
+  // part: was sich geändert hat, Platz ('place') oder Inhalt ('content'); nur das wird gespeichert und gegen das Modul gehalten
+  function touch(n, part) {
     dirty[n.id] = (dirty[n.id] || 0) + 1;
+    parts[n.id] = parts[n.id] && parts[n.id] !== part ? 'all' : part;
     w.clearTimeout(timers[n.id]);
     timers[n.id] = w.setTimeout(function () { save(n.id); }, 500);
   }
@@ -450,8 +447,8 @@
   function save(id) {
     var n = find(id), mark = dirty[id];
     if (!n) return;
-    post({ op: 'put', note: { id: n.id, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h, rot: n.rot, z: n.z, strokes: n.strokes } }).then(function (state) {
-      if (dirty[id] === mark) delete dirty[id];
+    post({ op: 'put', part: parts[id], note: { id: n.id, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h, rot: n.rot, z: n.z, strokes: n.strokes } }).then(function (state) {
+      if (dirty[id] === mark) { delete dirty[id]; delete parts[id]; }
       if (state && state.error) hint(state.error);
       apply(state);
     }, function () {
@@ -463,10 +460,15 @@
   function apply(state) {
     if (!state || typeof state.seq !== 'number' || state.seq < seq || !Array.isArray(state.notes)) return;
     seq = state.seq;
-    var mine = {};
-    notes.forEach(function (n) { mine[n.id] = n; });
-    var keep = function (id) { return (dirty[id] || gesture === id || (active === id && mode)) && mine[id]; };
-    var next = state.notes.map(function (n) { return keep(n.id) ? mine[n.id] : n; });
+    var mine = {}; notes.forEach(function (n) { mine[n.id] = n; });
+    var next = state.notes.map(function (n) {
+      var m = mine[n.id], p = parts[n.id];
+      var content = p === 'content' || p === 'all' || (active === n.id && mode), place = p === 'place' || p === 'all' || gesture === n.id;
+      if (!m || (!content && !place)) return n;
+      // Den Teil, den hier niemand anfasst, bestimmt das Modul: so wandert ein Zettel mit, während die Kachel ihn beschreibt
+      (content ? [] : ['text', 'color', 'strokes']).concat(place ? [] : ['x', 'y', 'w', 'h', 'rot', 'z']).forEach(function (k) { m[k] = n[k]; });
+      return m;
+    });
     notes.forEach(function (n) {
       if ((dirty[n.id] || active === n.id) && !next.some(function (m) { return m.id === n.id; })) next.push(n);
     });
@@ -490,8 +492,7 @@
     };
   }
 
-  api.apply = apply;
-  api.notes = function () { return notes; };
+  api.apply = apply; api.notes = function () { return notes; };
   apply(C.state);
   render();
 })();

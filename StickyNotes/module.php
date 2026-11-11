@@ -124,7 +124,7 @@ class StickyNotes extends IPSModuleStrict
      *   k=ext                 Beschreibung für die Browser-Erweiterung (nennt k=agent.js)
      *   k=agent.js            Zettel-Skript für das Fenster der Visu (nur mit „Zettel über der Visu“)
      *   k=poll&since=<seq>    Stand; die Zettel nur, wenn sich seit <seq> etwas geändert hat
-     *   k=save  (POST, JSON)  {op: put, note} | {op: del, id}; antwortet mit dem Stand
+     *   k=save  (POST, JSON)  {op: put, note, part?: place|content} | {op: del, id}; antwortet mit dem Stand
      */
     protected function ProcessHookData(): void
     {
@@ -169,8 +169,9 @@ class StickyNotes extends IPSModuleStrict
                 }
                 if (($in['op'] ?? '') === 'put') {
                     $note = NoteStore::Normalize($in['note'] ?? null);
-                    $error = is_string($note) ? $note : $this->Mutate(static function (array $list) use ($note): array {
-                        [$next, $failed] = NoteStore::Put($list, $note, time());
+                    $part = is_string($in['part'] ?? null) ? $in['part'] : '';
+                    $error = is_string($note) ? $note : $this->Mutate(static function (array $list) use ($note, $part): array {
+                        [$next, $failed] = NoteStore::Put($list, $note, time(), $part);
                         return $failed === null ? [$next, null] : [$list, $failed];
                     });
                 } elseif (($in['op'] ?? '') === 'del' && NoteStore::IsId($in['id'] ?? null)) {

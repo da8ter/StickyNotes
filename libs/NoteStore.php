@@ -19,6 +19,8 @@ final class NoteStore
     public const MAX_STORE_BYTES = 700000;
     public const COLORS = ['yellow', 'pink', 'green', 'blue'];
     public const PENS = 3;
+    // Die zwei Teile eines Zettels: Kachel und Visu speichern nur den, den sie geändert haben
+    private const PARTS = ['place' => ['x', 'y', 'w', 'h', 'rot', 'z'], 'content' => ['text', 'color', 'strokes']];
 
     public static function IsId(mixed $id): bool
     {
@@ -85,12 +87,18 @@ final class NoteStore
         ];
     }
 
-    /** Zettel einsetzen oder ersetzen; liefert [Liste, Fehler|null]. */
-    public static function Put(array $list, array $note, int $now): array
+    /**
+     * Zettel einsetzen oder ersetzen; liefert [Liste, Fehler|null]. Mit `$part` (place|content) ändert sich an einem
+     * vorhandenen Zettel nur dieser Teil: sonst überschriebe ein Bearbeiter mit seinem alten Stand, was der andere gerade tat.
+     */
+    public static function Put(array $list, array $note, int $now, string $part = ''): array
     {
         $found = false;
         foreach ($list as $i => $old) {
             if ($old['id'] === $note['id']) {
+                foreach (self::PARTS[$part === 'place' ? 'content' : ($part === 'content' ? 'place' : '')] ?? [] as $key) {
+                    $note[$key] = $old[$key];
+                }
                 $list[$i] = $note + ['rev' => (int) ($old['rev'] ?? 0) + 1, 'ts' => $now];
                 $found = true;
             }
