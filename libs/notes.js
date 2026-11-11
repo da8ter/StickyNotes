@@ -41,7 +41,7 @@
     + '.sn-tile .sn-note.sn-active{position:fixed;width:auto;aspect-ratio:auto;z-index:5;transform:none!important}'
     // Eingeklappt liegen die Zettel als kleiner Stapel auf dem Stapel-Knopf; der Knopf darüber bleibt die Tippfläche
     + '.sn-collapsed .sn-note{pointer-events:none;box-shadow:0 2px 5px rgba(0,0,0,.3);border-radius:1px 1px 5px 1px}'
-    + '.sn-fly .sn-note{transition:left .5s cubic-bezier(.3,.9,.3,1),top .5s cubic-bezier(.3,.9,.3,1),width .5s cubic-bezier(.3,.9,.3,1),height .5s cubic-bezier(.3,.9,.3,1),transform .5s,border-radius .5s,box-shadow .5s}'
+    + '.sn-fly .sn-note{transition-delay:var(--sn-d,0ms);transition:left .5s cubic-bezier(.3,.9,.3,1),top .5s cubic-bezier(.3,.9,.3,1),width .5s cubic-bezier(.3,.9,.3,1),height .5s cubic-bezier(.3,.9,.3,1),transform .5s,border-radius .5s,box-shadow .5s}'
     + '.sn-pile .sn-toggle{background:none;box-shadow:none;opacity:1}.sn-pile .sn-toggle svg{visibility:hidden}'
     + '.sn-body{position:absolute;inset:0;overflow:hidden;container-type:size;border-radius:inherit}'
     + '.sn-body::before{content:"";position:absolute;left:0;right:0;top:0;height:13%;background:rgba(0,0,0,.045)}'
@@ -205,11 +205,11 @@
       el.style.width = b.width + 'px'; el.style.height = b.height + 'px';
       el.style.zIndex = String(rank + 1);
       el.style.transform = 'rotate(' + (((rank * 37) % 15) - 7) + 'deg)';
-      el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
+      el.style.setProperty('--sn-d', Math.min(rank, 12) * 25 + 'ms');
       el.classList.remove('sn-below');
     } else if (OVERLAY) {
       var g = geometry(n);
-      el.style.transitionDelay = Math.min(rank, 12) * 25 + 'ms';
+      el.style.setProperty('--sn-d', Math.min(rank, 12) * 25 + 'ms');
       el.style.left = g.left + 'px'; el.style.top = g.top + 'px';
       el.style.width = g.pw + 'px'; el.style.height = g.ph + 'px';
       el.style.zIndex = String(rank + 1);
