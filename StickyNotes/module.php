@@ -122,7 +122,7 @@ class StickyNotes extends IPSModuleStrict
     /**
      * /hook/sticky/<ID>?t=<Token>&k=…
      *   k=ext                 Beschreibung für die Browser-Erweiterung (nennt k=agent.js)
-     *   k=agent.js            Zettel-Skript für das Fenster der Visu (nur mit „Zettel über der Visu“)
+     *   k=agent.js            Zettel-Skript für das Fenster der Visu (nur mit „Zettel über der Visu“); lädt die Erweiterung oder die Kachel
      *   k=poll&since=<seq>    Stand; die Zettel nur, wenn sich seit <seq> etwas geändert hat
      *   k=save  (POST, JSON)  {op: put, note, part?: place|content} | {op: del, id}; antwortet mit dem Stand
      */
@@ -265,6 +265,8 @@ class StickyNotes extends IPSModuleStrict
             'owner'  => 'sticky-' . $this->InstanceID,
             'mode'   => $mode,
             'hook'   => $this->HookBase(),
+            // Für die Kachel: Zettel über der Visu gewünscht, sie lädt k=agent.js notfalls selbst ins Fenster der Visu
+            'float'  => $this->ReadPropertyBoolean('Overlay'),
             'pollMs' => min(60, max(1, $this->ReadPropertyInteger('PollSeconds'))) * 1000,
             'corner' => min(3, max(0, $this->ReadPropertyInteger('Corner'))),
             'max'    => NoteStore::MAX_NOTES,

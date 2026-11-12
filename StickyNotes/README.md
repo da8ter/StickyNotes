@@ -10,17 +10,19 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 - Zettelblock in einer Bildschirmecke: neuer Zettel, alle Zettel ein- und ausblenden
 - Gleicher Stand auf allen Bildschirmen
 - Zettel aus Skripten ankleben und abnehmen
-- Kachel mit allen Zetteln als Brett, für Geräte ohne Browser-Erweiterung
+- Kachel mit allen Zetteln als Brett, für die Symcon-App
 
 ## Voraussetzungen
 
 - Symcon ab Version 8.1
-- Für die frei schwebenden Zettel: Chrome oder Edge mit der Browser-Erweiterung [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon). In der Symcon-App und in Browsern ohne Erweiterung zeigt die Kachel die Zettel.
+- Empfohlen: Chrome oder Edge mit der Browser-Erweiterung [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon). Mit ihr sind die Zettel sofort auf jeder Seite der Visualisierung da.
+- Ohne die Erweiterung bringt die Kachel die Zettel in die Visualisierung. Sie erscheinen dann erst, wenn die Seite mit der Kachel geöffnet wurde, und nach jedem Neuladen der Visualisierung erst, wenn sie erneut geöffnet wurde.
+- In der Symcon-App bleiben die Zettel als Brett in der Kachel und lassen sich nicht frei verschieben.
 
 ## Einrichten
 
-1. Instanz „Pinnwand“ anlegen.
-2. Im Formular der Instanz die „Adresse für die Browser-Erweiterung“ kopieren.
+1. Instanz „Pinnwand“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
+2. Mit Erweiterung: Im Formular der Instanz die „Adresse für die Browser-Erweiterung“ kopieren.
 3. In den Einstellungen der Erweiterung eine Verbindung anlegen: Adresse des Symcon-Servers, gefolgt von der kopierten Adresse.
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
 
@@ -44,7 +46,7 @@ Ein leerer Zettel verschwindet von selbst. Die Zettel liegen immer über der Vis
 
 | Einstellung | Bedeutung |
 | --- | --- |
-| Zettel über der Visualisierung zeigen | Schaltet die schwebenden Zettel ein. Aus: Zettel nur in der Kachel. |
+| Zettel über der Visualisierung zeigen | Schaltet die schwebenden Zettel ein, mit und ohne Erweiterung. Aus: Zettel nur in der Kachel. |
 | Ecke des Zettelblocks | Bildschirmecke für Plus und Stapel |
 | Auf Änderungen prüfen alle | Abstand, in dem ein Bildschirm Änderungen von anderen Bildschirmen holt |
 

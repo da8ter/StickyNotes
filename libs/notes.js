@@ -1,5 +1,5 @@
 /* Pinnwand: Klebezettel im Fenster der Visualisierung (mode "overlay", geladen von der Browser-Erweiterung
- * „Visu-Erweiterung für Symcon“ über den Hook k=agent.js) und als Brett in der Kachel (mode "tile").
+ * „Visu-Erweiterung für Symcon“ über den Hook k=agent.js, ohne sie von der Kachel) und als Brett in der Kachel (mode "tile").
  *
  * Die Visu ist eine Flutter-Fläche; eigene Elemente am body liegen immer darüber und ihre Zeiger- und
  * Tastenereignisse erreichen die Visu nicht (gemessen 10.11.2026). Lesen und Schreiben über den Hook:
@@ -490,6 +490,25 @@
       if (msg && msg.type === 'reload') w.location.reload();
       if (msg && msg.type === 'notes') apply(msg);
     };
+    floatFromTile();
+  }
+
+  /**
+   * Ohne die Browser-Erweiterung hängt die Kachel das Overlay selbst ins Fenster der Visu: Kachel-iframes haben dort
+   * denselben Ursprung und kein sandbox. Wirkt erst, wenn die Kachel einmal geladen wurde. In der App und beim direkten
+   * Aufruf gibt es kein erreichbares Hauptfenster; dort bleibt es beim Brett. Lädt die Erweiterung dasselbe Skript,
+   * gewinnt das erste (Sperre über __stickyNotes).
+   */
+  function floatFromTile() {
+    if (!C.float || !C.hook) return;
+    try {
+      var host = w.top, hd = host !== w ? host.document : null;
+      if (!hd || (host.__stickyNotes && host.__stickyNotes[C.owner]) || hd.querySelector('script[data-sticky="' + C.owner + '"]')) return;
+      var s = hd.createElement('script');
+      s.setAttribute('data-sticky', C.owner);
+      s.src = C.hook + '&k=agent.js';
+      (hd.head || hd.documentElement).appendChild(s);
+    } catch (e) { /* Hauptfenster nicht erreichbar */ }
   }
 
   api.apply = apply; api.notes = function () { return notes; };

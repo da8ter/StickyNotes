@@ -3,7 +3,7 @@
         {
             "type": "CheckBox",
             "name": "Overlay",
-            "caption": "Show notes on top of the visualization (needs the browser extension)"
+            "caption": "Show notes on top of the visualization"
         },
         {
             "type": "Select",
@@ -28,7 +28,11 @@
     "actions": [
         {
             "type": "Label",
-            "caption": "Notes float on top of the visualization when the browser extension \"Visu-Erweiterung für Symcon\" is connected with the address below (put your server address in front). Without the extension, the tile shows the notes as a board."
+            "caption": "The browser extension \"Visu-Erweiterung für Symcon\" (Chrome, Edge) shows the notes right away on every page of the visualization. To use it, connect the extension with the address below, with your server address in front."
+        },
+        {
+            "type": "Label",
+            "caption": "Without the extension, the tile brings the notes into the visualization: they only appear once the page with the tile has been opened, and after every reload of the visualization only once it has been opened again. In the Symcon app the notes stay in the tile as a board and cannot be moved freely."
         }
     ]
 }
