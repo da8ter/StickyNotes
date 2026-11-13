@@ -11,6 +11,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 - Gleicher Stand auf allen Bildschirmen
 - Zettel aus Skripten ankleben und abnehmen
 - Kachel mit allen Zetteln als Brett, für die Symcon-App; auf einer schmalen Kachel als Kartenstoß zum Durchblättern
+- Runder Knopf für einen neuen Zettel in der Akzentfarbe der Visualisierung
 
 ## Voraussetzungen
 
