@@ -21,6 +21,8 @@
   var MIN_PX = 90, MAX_STROKES = 400, MAX_POINTS = 2000;
   // Schmale Kachel: Kartenstoss statt Raster. Das Raster braucht zwei Spalten (je bis 150 px), darunter wird es eng.
   var DECK_W = 260, DECK_PEEK = 4, DECK_BACK = 4, DECK_MAX = 220;
+  // Auf der Kachel liegen die Zettel schraeger als im Overlay: n.rot (+-3 Grad) mal diesem Faktor
+  var TILE_TILT = 1.8;
   var L = function (text) { return (C.labels && C.labels[text]) || text; };
   var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
   var store = function (key, value) {
@@ -43,6 +45,9 @@
     + '.sn-tile .sn-note{position:relative;flex:0 0 auto;width:min(150px,calc(50% - 6px));aspect-ratio:1;cursor:pointer}'
     + '.sn-tile .sn-note.sn-active{position:fixed;width:auto;aspect-ratio:auto;z-index:5;transform:none!important}'
     // Kartenstoss auf der schmalen Kachel: der vorderste Zettel mittig, die uebrigen ragen nach oben links heraus
+    // Beim Bearbeiten bleibt nur der aufgeschlagene Zettel stehen: er fuellt die Kachel nicht mehr ganz,
+    // die uebrigen lugten sonst zerfranst darunter hervor
+    + '.sn-tile.sn-open .sn-note:not(.sn-active){visibility:hidden}'
     + '.sn-tile.sn-deck{display:block}'
     + '.sn-tile.sn-deck .sn-note:not(.sn-active){position:absolute;flex:none;width:auto;aspect-ratio:auto}'
     + '.sn-deck-n{position:fixed;left:0;right:0;text-align:center;font-size:13px;opacity:.6;pointer-events:none;z-index:3}'
@@ -200,6 +205,13 @@
     return { size: size, left: margin.side + span + (cw - span - size) / 2, top: margin.top + span + (ch - span - size) / 2 };
   }
 
+  /** Der aufgeschlagene Zettel in der Kachel: mittig, so gross wie moeglich, Seitenverhaeltnis wie klein (quadratisch). */
+  function openBox() {
+    var cw = w.innerWidth - margin.side * 2, ch = w.innerHeight - margin.top - margin.bottom;
+    var size = Math.max(MIN_PX, Math.min(cw, ch));
+    return { size: size, left: margin.side + (cw - size) / 2, top: margin.top + (ch - size) / 2 };
+  }
+
   /** Reihenfolge im Stoss: der zuletzt angefasste Zettel zuerst. */
   function deckOrder() {
     return notes.slice().sort(function (a, b) { return (b.z || 0) - (a.z || 0); });
@@ -261,18 +273,28 @@
       el.style.right = el.style.bottom = '';
       el.style.width = el.style.height = box.size + 'px';
       el.style.zIndex = String(notes.length - depth);
-      el.style.transform = 'rotate(' + (depth ? ((depth * 37) % 11) - 5 : (n.rot || 0) / 3) + 'deg)';
+      el.style.transform = 'rotate(' + (depth ? ((depth * 37) % 17) - 8 : (n.rot || 0) * TILE_TILT) + 'deg)';
       el.style.setProperty('--sn-d', Math.min(depth, 6) * 20 + 'ms');
       el.classList.remove('sn-below');
+    } else if (isActive) {
+      // Aufgeschlagen so gross wie moeglich, aber quadratisch wie in der kleinen Ansicht:
+      // die Handschrift liegt im Zettel (viewBox 0 0 1000 1000, preserveAspectRatio none) und
+      // wuerde in einem gezogenen Rechteck verzerrt gegenueber dem, was die Kachel sonst zeigt.
+      var box = openBox();
+      el.style.order = '';
+      el.style.transform = '';
+      el.style.zIndex = '';
+      el.style.left = box.left + 'px';
+      el.style.top = box.top + 'px';
+      el.style.right = el.style.bottom = '';
+      el.style.width = el.style.height = box.size + 'px';
     } else {
-      // Raster, oder der aufgeschlagene Zettel ueber der ganzen Kachel. Was der Stoss gesetzt hat, faellt hier weg.
+      // Raster. Was Stoss oder aufgeschlagener Zettel gesetzt haben, faellt hier weg.
       el.style.order = String(-rank);
-      el.style.transform = isActive ? '' : 'rotate(' + (n.rot || 0) / 2 + 'deg)';
+      el.style.transform = 'rotate(' + (n.rot || 0) * TILE_TILT + 'deg)';
       el.style.width = el.style.height = '';
       el.style.zIndex = '';
-      el.style.left = el.style.right = isActive ? margin.side + 'px' : '';
-      el.style.top = isActive ? margin.top + 'px' : '';
-      el.style.bottom = isActive ? margin.bottom + 'px' : '';
+      el.style.left = el.style.right = el.style.top = el.style.bottom = '';
     }
   }
 
@@ -315,6 +337,7 @@
     root.classList.toggle('sn-pile', collapsed && notes.length > 0);
     root.classList.toggle('sn-empty', !notes.length);
     root.classList.toggle('sn-deck', deck);
+    root.classList.toggle('sn-open', !OVERLAY && !!active);
     if (count) count.textContent = notes.length ? String(notes.length) : '';
     if (deckN) {
       var show = deck && !active && notes.length > 1;

@@ -42,6 +42,8 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 | Im Kartenstoß blättern | Zettel antippen |
 | Zettel im Kartenstoß öffnen | Zettel gedrückt halten |
 
+Zum Bearbeiten wird ein Zettel in der Kachel groß und mittig aufgeschlagen; er behält dabei sein Seitenverhältnis, damit Handschrift und Text genauso stehen wie in der kleinen Ansicht. Die übrigen Zettel treten so lange zurück.
+
 Auf einer schmalen Kachel liegen die Zettel als Kartenstoß übereinander statt nebeneinander: der vorderste groß in der Mitte, die übrigen schauen dahinter hervor, darunter steht die Stelle im Stoß. Ein Tipp blättert weiter, ein Tipp auf einen hinteren Zettel holt ihn nach vorn, langes Drücken öffnet den vordersten. Wird die Kachel breiter gezogen, wechselt sie von selbst zurück zum Brett. Bei einem einzigen Zettel gibt es nichts zu blättern — er füllt die Kachel und öffnet sich beim Antippen.
 
 Ein leerer Zettel verschwindet von selbst. Die Zettel liegen immer über der Visualisierung, auch über ihren Dialogen; zum Bedienen verdeckter Kacheln die Zettel ausblenden.
