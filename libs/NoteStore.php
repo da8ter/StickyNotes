@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Ein Zettel: id, text, color, x/y (Mitte, Anteil am Fenster), w/h (Anteil an der kürzeren Fensterseite),
  * rot (Grad), z (Reihenfolge), strokes (Handschrift als Linien: Stiftfarbe c, Punkte p = x0,y0,x1,y1,… in 0..1000
  * bezogen auf den Zettel), rev, ts.
- * Ein Sticker ist derselbe Datensatz mit img = Medien-ID eines eingerichteten Bildes: gleiche Lage, gleicher Abgleich,
+ * Ein Sticker ist derselbe Datensatz mit img = Medien-ID eines eingerichteten Bildes oder Name eines eingebauten: gleiche Lage, gleicher Abgleich,
  * nur ohne Papier, Text und Handschrift. Ob die ID eingerichtet ist, weiß nur das Modul (Symcon), nicht diese Datei.
  */
 final class NoteStore
@@ -73,9 +73,10 @@ final class NoteStore
         if (strlen((string) json_encode($strokes)) > self::MAX_INK_BYTES) {
             return 'Too much handwriting on this note';
         }
-        // Medien-ID eines Stickers; 0 = gewoehnlicher Zettel. Gegen die eingerichtete Liste prueft das Modul.
+        // Sticker: Medien-ID (Zahl) oder Name eines eingebauten Bildes (Text); 0 = gewoehnlicher Zettel.
+        // Ob es die ID bzw. den Namen gibt, prueft das Modul.
         $img = $in['img'] ?? 0;
-        if (!is_int($img) || $img < 0) {
+        if (!(is_int($img) && $img >= 0) && !(is_string($img) && preg_match('/^[a-z0-9_]{1,40}$/', $img) === 1)) {
             return 'Invalid sticker';
         }
         $number = static fn (string $key, float $default, float $min, float $max): float

@@ -9,7 +9,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 - Drei Stiftfarben, letzter Strich zurück
 - Zettelblock in einer Bildschirmecke: neuer Zettel, alle Zettel ein- und ausblenden
 - Gleicher Stand auf allen Bildschirmen
-- Sticker: Bilder aus Medienobjekten frei auf dem Brett platzieren, verschieben und in der Größe ändern
+- Sticker: 40 eingebaute Bilder (Herz, Stern, Daumen hoch, Kaffee, Geschenk …) und eigene Bilder aus Medienobjekten frei auf dem Brett platzieren, verschieben und in der Größe ändern
 - Zettel aus Skripten ankleben und abnehmen
 - Kachel mit allen Zetteln als Brett, für die Symcon-App; auf einer schmalen Kachel als Kartenstoß zum Durchblättern
 - Runder Knopf für einen neuen Zettel in der Akzentfarbe der Visualisierung
@@ -48,7 +48,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 
 Zum Bearbeiten wird ein Zettel in der Kachel groß und mittig aufgeschlagen; er behält dabei sein Seitenverhältnis, damit Handschrift und Text genauso stehen wie in der kleinen Ansicht. Die übrigen Zettel treten so lange zurück.
 
-**Sticker** sind Bilder aus Medienobjekten. Sie werden in der Konfiguration eingerichtet und erscheinen dann als Auswahl am Plus-Knopf, neben dem gewöhnlichen Zettel. Ein Sticker liegt wie ein Zettel auf dem Brett: verschieben, Größe ändern, abreißen. Er trägt keinen Text und keine Handschrift. Möglich sind PNG, JPEG, GIF, WebP und BMP bis 900 kB; freigestellte Bilder (PNG mit Transparenz) wirken am besten, denn der Schatten folgt der Form. Bilder, die sich nicht verwenden lassen, nennt die Konfigurationsseite mit dem Grund und tauchen gar nicht erst in der Auswahl auf.
+**Sticker** sind Bilder auf dem Brett. 40 Alltagsmotive bringt das Modul mit (Fluent Emoji 3D von Microsoft): Herz, Stern, Daumen hoch, Erledigt, Achtung, Haus, Einkaufswagen, Kaffee, Geschenk, Geburtstagskuchen und mehr. Dazu kommen eigene Bilder aus Medienobjekten, die in der Konfiguration eingerichtet werden. Alle erscheinen als Auswahl am Plus-Knopf, neben dem gewöhnlichen Zettel; die eigenen zuerst. Ein Sticker liegt wie ein Zettel auf dem Brett: verschieben, Größe ändern, abreißen. Er trägt keinen Text und keine Handschrift. Möglich sind PNG, JPEG, GIF, WebP und BMP bis 900 kB; freigestellte Bilder (PNG mit Transparenz) wirken am besten, denn der Schatten folgt der Form. Bilder, die sich nicht verwenden lassen, nennt die Konfigurationsseite mit dem Grund und tauchen gar nicht erst in der Auswahl auf.
 
 Auf einer schmalen Kachel liegen die Zettel als Kartenstoß übereinander statt nebeneinander: der vorderste groß in der Mitte, die übrigen schauen dahinter hervor, darunter steht die Stelle im Stoß. Ein Tipp blättert weiter, ein Tipp auf einen hinteren Zettel holt ihn nach vorn, langes Drücken öffnet den vordersten. Wird die Kachel breiter gezogen, wechselt sie von selbst zurück zum Brett. Bei einem einzigen Zettel gibt es nichts zu blättern — er füllt die Kachel und öffnet sich beim Antippen.
 
@@ -61,6 +61,8 @@ Ein leerer Zettel verschwindet von selbst. Die Zettel liegen immer über der Vis
 | Zettel über der Visualisierung zeigen | Schaltet die schwebenden Zettel ein, mit und ohne Erweiterung. Aus: Zettel nur in der Kachel. |
 | Ecke des Zettelblocks | Bildschirmecke für Plus und Stapel |
 | Auf Änderungen prüfen alle | Abstand, in dem ein Bildschirm Änderungen von anderen Bildschirmen holt |
+| Eingebaute Sticker | Bietet die 40 mitgelieferten Bilder am Plus-Knopf an (Standard: an). Ausgeschaltet bleiben schon aufgeklebte liegen. |
+| Sticker | Eigene Bilder aus Medienobjekten für die Auswahl am Plus-Knopf, optional mit Namen |
 
 ## Variablen
 
@@ -88,3 +90,7 @@ $zettel = json_decode(STICKY_GetNotes(12345), true);
 
 - Höchstens 30 Zettel, 600 Zeichen Text je Zettel
 - Die Adresse für die Erweiterung enthält ein Zugangswort. Wer sie kennt, kann die Zettel lesen und ändern.
+
+## Bildnachweis
+
+Die eingebauten Sticker stammen aus [Fluent Emoji](https://github.com/microsoft/fluentui-emoji) von Microsoft, MIT-Lizenz (`imgs/fluent/LICENSE`).

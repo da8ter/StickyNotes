@@ -20,6 +20,20 @@ class StickyNotes extends IPSModuleStrict
         'gif' => 'image/gif', 'webp' => 'image/webp', 'bmp' => 'image/bmp'];
     // Der Hook liefert hoechstens 1 MiB aus; darueber ersetzt Symcon die Antwort
     private const MAX_STICKER_BYTES = 900000;
+    // Eingebaute Sticker: Fluent Emoji 3D von Microsoft (MIT, imgs/fluent/LICENSE), 256 px. Name = Dateiname ohne .png.
+    private const FLUENT_DIR = __DIR__ . '/../imgs/fluent/';
+    private const FLUENT = [
+        'red_heart' => 'Red heart', 'star' => 'Star', 'thumbs_up' => 'Thumbs up', 'check_mark_button' => 'Done mark',
+        'warning' => 'Warning sign', 'red_exclamation_mark' => 'Exclamation mark', 'red_question_mark' => 'Question mark', 'hundred_points' => 'Hundred points',
+        'sparkles' => 'Sparkles', 'fire' => 'Fire', 'clapping_hands' => 'Applause', 'party_popper' => 'Party',
+        'smiling_face_with_heart_eyes' => 'In love', 'face_with_tears_of_joy' => 'Tears of joy', 'sleeping_face' => 'Sleeping', 'dog_face' => 'Dog',
+        'cat_face' => 'Cat', 'house' => 'House', 'shopping_cart' => 'Shopping cart', 'light_bulb' => 'Idea',
+        'key' => 'Key', 'alarm_clock' => 'Alarm clock', 'calendar' => 'Calendar', 'envelope' => 'Letter',
+        'telephone_receiver' => 'Call', 'pushpin' => 'Pin', 'broom' => 'Broom', 'pill' => 'Pill',
+        'bed' => 'Bed', 'pizza' => 'Pizza', 'hot_beverage' => 'Coffee', 'bread' => 'Bread',
+        'glass_of_milk' => 'Milk', 'red_apple' => 'Apple', 'birthday_cake' => 'Birthday cake', 'wrapped_gift' => 'Gift',
+        'balloon' => 'Balloon', 'sun' => 'Sun', 'umbrella' => 'Umbrella', 'snowflake' => 'Snowflake',
+    ];
     private const JSON = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
 
     public function Create(): void
@@ -29,6 +43,7 @@ class StickyNotes extends IPSModuleStrict
         $this->RegisterPropertyInteger('Corner', 3);
         $this->RegisterPropertyInteger('PollSeconds', 3);
         $this->RegisterPropertyString('Stickers', '[]');
+        $this->RegisterPropertyBoolean('BuiltinStickers', true);
         $this->RegisterAttributeString('Notes', '[]');
         $this->RegisterAttributeInteger('Seq', 0);
         $this->RegisterAttributeString('HookToken', '');
@@ -156,7 +171,8 @@ class StickyNotes extends IPSModuleStrict
         $key = isset($_GET['k']) && is_string($_GET['k']) ? $_GET['k'] : '';
         $this->SendHeader('X-Content-Type-Options: nosniff');
         // Sticker aendern sich selten und kosten sonst bei jedem Bild einen Abruf
-        $this->SendHeader($key === 'img' ? 'Cache-Control: private, max-age=300' : 'Cache-Control: no-store');
+        // Eingebaute Bilder aendern sich nie (fester Dateiname), eigene Medien selten
+        $this->SendHeader($key === 'img' ? 'Cache-Control: private, max-age=' . (isset($_GET['e']) ? 86400 : 300) : 'Cache-Control: no-store');
         $overlay = $this->ReadPropertyBoolean('Overlay');
         switch ($key) {
             case 'ext':
@@ -182,6 +198,16 @@ class StickyNotes extends IPSModuleStrict
                 echo json_encode($this->State($since), self::JSON);
                 return;
             case 'img':
+                $builtin = isset($_GET['e']) && is_string($_GET['e']) ? $_GET['e'] : '';
+                if ($builtin !== '') {
+                    if (!$this->IsBuiltin($builtin)) {
+                        $this->SendStatus(404);
+                        return;
+                    }
+                    $this->SendHeader('Content-Type: image/png');
+                    echo (string) file_get_contents(self::FLUENT_DIR . $builtin . '.png');
+                    return;
+                }
                 $id = isset($_GET['m']) && is_numeric($_GET['m']) ? (int) $_GET['m'] : 0;
                 $type = $this->IsSticker($id) ? $this->StickerType($id) : '';
                 $bytes = $type === '' ? '' : (string) base64_decode(IPS_GetMediaContent($id), true);
@@ -202,8 +228,13 @@ class StickyNotes extends IPSModuleStrict
                 if (($in['op'] ?? '') === 'put') {
                     $note = NoteStore::Normalize($in['note'] ?? null);
                     $part = is_string($in['part'] ?? null) ? $in['part'] : '';
-                    if (!is_string($note) && $note['img'] > 0 && !$this->IsSticker($note['img'])) {
-                        $note = 'Unknown sticker';
+                    // Eigene Medien nur aus der eingerichteten Liste, eingebaute nur aus dem Katalog. Ein eingebauter
+                    // Sticker bleibt gueltig, wenn der Schalter spaeter ausgeht: er liegt dann schon auf dem Brett.
+                    if (!is_string($note)) {
+                        $img = $note['img'];
+                        if ((is_int($img) && $img > 0 && !$this->IsSticker($img)) || (is_string($img) && !$this->IsBuiltin($img))) {
+                            $note = 'Unknown sticker';
+                        }
                     }
                     $error = is_string($note) ? $note : $this->Mutate(static function (array $list) use ($note, $part): array {
                         [$next, $failed] = NoteStore::Put($list, $note, time(), $part);
@@ -260,13 +291,27 @@ class StickyNotes extends IPSModuleStrict
             $name = is_array($row) && is_string($row['Name'] ?? null) && trim($row['Name']) !== '' ? trim($row['Name']) : IPS_GetName($id);
             $out[$id] = ['m' => $id, 'n' => mb_substr($name, 0, 60)];
         }
-        return array_values($out);
+        $out = array_values($out);
+        if ($this->ReadPropertyBoolean('BuiltinStickers')) {
+            foreach (self::FLUENT as $key => $label) {
+                if ($this->IsBuiltin($key)) {
+                    $out[] = ['e' => $key, 'n' => $this->Translate($label)];
+                }
+            }
+        }
+        return $out;
+    }
+
+    /** Eingebauter Sticker: Name aus dem Katalog und die Datei liegt im Modul. */
+    private function IsBuiltin(string $key): bool
+    {
+        return isset(self::FLUENT[$key]) && is_file(self::FLUENT_DIR . $key . '.png');
     }
 
     private function IsSticker(int $id): bool
     {
         foreach ($this->Stickers() as $sticker) {
-            if ($sticker['m'] === $id) {
+            if (($sticker['m'] ?? 0) === $id) {
                 return true;
             }
         }

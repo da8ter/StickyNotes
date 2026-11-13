@@ -41,6 +41,11 @@
             "caption": "Images from media objects can be placed on the board as stickers. Set them up here; they then appear as a choice at the plus button. Supported: PNG, JPEG, GIF, WebP and BMP up to 900 kB."
         },
         {
+            "type": "CheckBox",
+            "name": "BuiltinStickers",
+            "caption": "Built-in stickers (Fluent Emoji 3D by Microsoft, MIT license)"
+        },
+        {
             "type": "List",
             "name": "Stickers",
             "caption": "Stickers",

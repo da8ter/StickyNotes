@@ -24,6 +24,8 @@
   // Auf der Kachel liegen die Zettel schraeger als im Overlay: n.rot (+-3 Grad) mal diesem Faktor
   var TILE_TILT = 1.8;
   var L = function (text) { return (C.labels && C.labels[text]) || text; };
+  // Sticker: Medien-ID (Zahl) oder Name eines eingebauten Bildes (Text)
+  var imgSrc = function (img) { return C.hook + '&k=img&' + (typeof img === 'string' ? 'e=' : 'm=') + encodeURIComponent(img); };
   var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
   var store = function (key, value) {
     try { if (value === undefined) return w.localStorage.getItem(C.owner + '.' + key); w.localStorage.setItem(C.owner + '.' + key, value); } catch (e) { /* ohne Speicher */ }
@@ -71,7 +73,9 @@
     + '.sn-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}'
     // Auswahl am Plus-Knopf: Zettel und die eingerichteten Sticker
     + '.sn-pick{position:absolute;display:none;flex-wrap:wrap;gap:8px;padding:10px;border-radius:14px;background:rgba(28,28,30,.94);'
-    + 'box-shadow:0 8px 20px rgba(0,0,0,.4);width:max-content;max-width:min(232px,calc(100vw - 28px));z-index:2147483002}'
+    + 'box-shadow:0 8px 20px rgba(0,0,0,.4);width:max-content;max-width:min(232px,calc(100vw - 28px));z-index:2147483002;'
+    // Mit den eingebauten Stickern sind es gut 40 Bilder: die Auswahl scrollt statt aus dem Bild zu wachsen
+    + 'max-height:min(330px,calc(100vh - 96px));overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}'
     + '.sn-tile .sn-pick{z-index:6}.sn-pad.sn-picking .sn-pick{display:flex}'
     + '.sn-c0 .sn-pick,.sn-c1 .sn-pick{top:100%}.sn-c2 .sn-pick,.sn-c3 .sn-pick{bottom:100%}'
     + '.sn-c0 .sn-pick,.sn-c2 .sn-pick{left:12px}.sn-c1 .sn-pick,.sn-c3 .sn-pick{right:12px}'
@@ -136,17 +140,21 @@
   var stickers = Array.isArray(C.stickers) ? C.stickers : [];
   var pick = h('div', 'sn-pick', pad);
   function closePick() { pad.classList.remove('sn-picking'); }
+  var thumbs = [];
   button(pad, 'sn-p', L('New note'), ICONS.plus, function () {
     if (!stickers.length) return addNote(0);
+    // Die Vorschaubilder erst beim ersten Oeffnen holen: sonst kostet jede Kachel beim Laden gut 40 Abrufe am Hook
+    thumbs.forEach(function (t) { if (!t.im.hasAttribute('src')) t.im.setAttribute('src', imgSrc(t.img)); });
     pad.classList.toggle('sn-picking');
   });
   if (stickers.length) {
     button(pick, 'sn-i sn-paper', L('Note'), ICONS.plus, function () { closePick(); addNote(0); });
     stickers.forEach(function (st) {
-      var b = button(pick, 'sn-i', st.n || L('Sticker'), '', function () { closePick(); addNote(st.m); });
+      var img = st.m || st.e;
+      var b = button(pick, 'sn-i', st.n || L('Sticker'), '', function () { closePick(); addNote(img); });
       var im = h('img', '', b);
       im.alt = '';
-      im.setAttribute('src', C.hook + '&k=img&m=' + st.m);
+      thumbs.push({ im: im, img: img });
     });
   }
   if (OVERLAY) {
@@ -271,14 +279,14 @@
   }
 
   function paint(el, n, rank, depth) {
-    var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow, sticker = (n.img || 0) > 0;
+    var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow, sticker = !!n.img;
     el.style.background = sticker ? 'none' : 'linear-gradient(180deg,' + pair[0] + ',' + pair[1] + ')';
     el.classList.toggle('sn-sticker', sticker);
     // Am Sticker gibt es nichts zu tippen, zu zeichnen und keine Zettelfarbe
     [el._type, el._drawB, el._colorB].concat(el._pens).forEach(function (b) { b.style.display = sticker ? 'none' : ''; });
     el._img.style.display = sticker ? '' : 'none';
     if (sticker) {
-      var src = C.hook + '&k=img&m=' + n.img;
+      var src = imgSrc(n.img);
       if (el._img.getAttribute('src') !== src) el._img.setAttribute('src', src);
     } else if (el._img.hasAttribute('src')) {
       el._img.removeAttribute('src');
