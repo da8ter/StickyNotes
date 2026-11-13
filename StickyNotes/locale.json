@@ -4,7 +4,7 @@
             "Sticky Notes": "Sticky Notes"
         },
         "de": {
-            "Sticky Notes": "Pinnwand",
+            "Sticky Notes": "Klebezettel",
             "Show notes on top of the visualization": "Zettel über der Visualisierung zeigen",
             "Corner of the note pad": "Ecke des Zettelblocks",
             "Top left": "Oben links",
@@ -17,7 +17,7 @@
             "Address for the browser extension": "Adresse für die Browser-Erweiterung",
             "Notes": "Zettel",
             "\"Show notes on top of the visualization\" is switched off.": "„Zettel über der Visualisierung zeigen“ ist ausgeschaltet.",
-            "The board is busy": "Die Pinnwand ist gerade belegt",
+            "The board is busy": "Die Zettel sind gerade in Arbeit",
             "New note": "Neuer Zettel",
             "Show or hide notes": "Zettel ein- oder ausblenden",
             "Type": "Tippen",
@@ -28,7 +28,7 @@
             "Tear off": "Abreißen",
             "Tear off?": "Wirklich abreißen?",
             "Done": "Fertig",
-            "The board is full": "Die Pinnwand ist voll",
+            "The board is full": "Es passen keine Zettel mehr dazu",
             "No notes": "Keine Zettel",
             "Invalid note": "Ungültiger Zettel",
             "Invalid text": "Ungültiger Text",

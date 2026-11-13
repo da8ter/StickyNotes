@@ -1,5 +1,5 @@
-# Pinnwand
+# Klebezettel
 
 Klebezettel für die Kachel-Visualisierung von Symcon: frei platzierbar über der ganzen Visualisierung, zum Tippen und zum Schreiben mit der Hand.
 
-- [Pinnwand](StickyNotes/README.md)
+- [Klebezettel](StickyNotes/README.md)

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Bausteine der Pinnwand ohne Symcon: prüft Zettel, die von der Visu oder aus Skripten kommen, und pflegt die Liste.
+ * Bausteine der Klebezettel ohne Symcon: prüft Zettel, die von der Visu oder aus Skripten kommen, und pflegt die Liste.
  * Ein Zettel: id, text, color, x/y (Mitte, Anteil am Fenster), w/h (Anteil an der kürzeren Fensterseite),
  * rot (Grad), z (Reihenfolge), strokes (Handschrift als Linien: Stiftfarbe c, Punkte p = x0,y0,x1,y1,… in 0..1000
  * bezogen auf den Zettel), rev, ts.

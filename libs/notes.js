@@ -1,4 +1,4 @@
-/* Pinnwand: Klebezettel im Fenster der Visualisierung (mode "overlay", geladen von der Browser-Erweiterung
+/* Klebezettel im Fenster der Visualisierung (mode "overlay", geladen von der Browser-Erweiterung
  * „Visu-Erweiterung für Symcon“ über den Hook k=agent.js, ohne sie von der Kachel) und als Brett in der Kachel (mode "tile").
  *
  * Die Visu ist eine Flutter-Fläche; eigene Elemente am body liegen immer darüber und ihre Zeiger- und

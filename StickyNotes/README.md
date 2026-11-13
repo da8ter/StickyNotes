@@ -1,4 +1,4 @@
-# Pinnwand
+# Klebezettel
 
 Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei über der ganzen Visualisierung, auf jeder Seite und auf jedem verbundenen Bildschirm an derselben Stelle. Geschrieben wird mit der Tastatur oder mit dem Finger.
 
@@ -22,7 +22,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 
 ## Einrichten
 
-1. Instanz „Pinnwand“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
+1. Instanz „Klebezettel“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
 2. Mit Erweiterung: Im Formular der Instanz die „Adresse für die Browser-Erweiterung“ kopieren.
 3. In den Einstellungen der Erweiterung eine Verbindung anlegen: Adresse des Symcon-Servers, gefolgt von der kopierten Adresse.
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
@@ -66,7 +66,7 @@ Ein leerer Zettel verschwindet von selbst. Die Zettel liegen immer über der Vis
 ## Funktionen für Skripte
 
 ```php
-// Zettel ankleben; Farbe: gelb, rosa, grün, blau. Liefert die Kennung oder '' (Pinnwand voll).
+// Zettel ankleben; Farbe: gelb, rosa, grün, blau. Liefert die Kennung oder '' (kein Platz mehr).
 $id = STICKY_Add(12345, 'Waschmaschine ist fertig', 'blau');
 
 // Zettel abnehmen

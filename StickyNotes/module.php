@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/NoteStore.php';
 
 /**
- * Pinnwand: Klebezettel, die frei über der Visualisierung liegen (über die Browser-Erweiterung
+ * Klebezettel, die frei über der Visualisierung liegen (über die Browser-Erweiterung
  * „Visu-Erweiterung für Symcon“) und als Brett in einer Kachel. Die Zettel liegen im Attribut `Notes`;
  * Visu und Kachel lesen und schreiben über den Hook /hook/sticky/<ID>?t=<Token>.
  */
