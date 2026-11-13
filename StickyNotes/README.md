@@ -10,7 +10,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 - Zettelblock in einer Bildschirmecke: neuer Zettel, alle Zettel ein- und ausblenden
 - Gleicher Stand auf allen Bildschirmen
 - Zettel aus Skripten ankleben und abnehmen
-- Kachel mit allen Zetteln als Brett, für die Symcon-App
+- Kachel mit allen Zetteln als Brett, für die Symcon-App; auf einer schmalen Kachel als Kartenstoß zum Durchblättern
 
 ## Voraussetzungen
 
@@ -39,6 +39,10 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 | Farbe wechseln | Farbpunkt |
 | Abreißen | Mülleimer zweimal antippen |
 | Alle Zettel aus- und einblenden | Stapel am Zettelblock |
+| Im Kartenstoß blättern | Zettel antippen |
+| Zettel im Kartenstoß öffnen | Zettel gedrückt halten |
+
+Auf einer schmalen Kachel liegen die Zettel als Kartenstoß übereinander statt nebeneinander: der vorderste groß in der Mitte, die übrigen schauen dahinter hervor, darunter steht die Stelle im Stoß. Ein Tipp blättert weiter, ein Tipp auf einen hinteren Zettel holt ihn nach vorn, langes Drücken öffnet den vordersten. Wird die Kachel breiter gezogen, wechselt sie von selbst zurück zum Brett. Bei einem einzigen Zettel gibt es nichts zu blättern — er füllt die Kachel und öffnet sich beim Antippen.
 
 Ein leerer Zettel verschwindet von selbst. Die Zettel liegen immer über der Visualisierung, auch über ihren Dialogen; zum Bedienen verdeckter Kacheln die Zettel ausblenden.
 

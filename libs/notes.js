@@ -19,6 +19,8 @@
   var COLOR_KEYS = Object.keys(COLORS);
   var PENS = ['#1f2933', '#d7263d', '#1b5fd1', '#1a8f3c', '#f08a00', '#8a2be2'];
   var MIN_PX = 90, MAX_STROKES = 400, MAX_POINTS = 2000;
+  // Schmale Kachel: Kartenstoss statt Raster. Das Raster braucht zwei Spalten (je bis 150 px), darunter wird es eng.
+  var DECK_W = 260, DECK_PEEK = 4, DECK_BACK = 4, DECK_MAX = 220;
   var L = function (text) { return (C.labels && C.labels[text]) || text; };
   var clamp = function (v, lo, hi) { return Math.min(hi, Math.max(lo, v)); };
   var store = function (key, value) {
@@ -27,6 +29,7 @@
   };
 
   var notes = [], seq = -1, els = {}, active = null, mode = '', pen = 0, gesture = null;
+  var deck = false, deckIndex = 0, deckN = null;
   var dirty = {}, parts = {}, timers = {}, collapsed = OVERLAY && store('collapsed') === '1';
   var lastColor = COLORS[store('color')] ? store('color') : 'yellow';
 
@@ -39,6 +42,11 @@
     + 'border-radius:2px 2px 12px 2px;box-shadow:0 8px 18px rgba(0,0,0,.28),0 1px 3px rgba(0,0,0,.22)}'
     + '.sn-tile .sn-note{position:relative;flex:0 0 auto;width:min(150px,calc(50% - 6px));aspect-ratio:1;cursor:pointer}'
     + '.sn-tile .sn-note.sn-active{position:fixed;width:auto;aspect-ratio:auto;z-index:5;transform:none!important}'
+    // Kartenstoss auf der schmalen Kachel: der vorderste Zettel mittig, die uebrigen ragen nach oben links heraus
+    + '.sn-tile.sn-deck{display:block}'
+    + '.sn-tile.sn-deck .sn-note:not(.sn-active){position:absolute;flex:none;width:auto;aspect-ratio:auto}'
+    + '.sn-deck-n{position:fixed;left:0;right:0;text-align:center;font-size:13px;opacity:.6;pointer-events:none;z-index:3}'
+    + '.sn-deck-n:empty{display:none}'
     // Eingeklappt liegen die Zettel als kleiner Stapel auf dem Stapel-Knopf; der Knopf darüber bleibt die Tippfläche
     + '.sn-collapsed .sn-note{pointer-events:none;box-shadow:0 2px 5px rgba(0,0,0,.3);border-radius:1px 1px 5px 1px}'
     + '.sn-fly .sn-note{transition-delay:var(--sn-d,0ms);transition:left .5s cubic-bezier(.3,.9,.3,1),top .5s cubic-bezier(.3,.9,.3,1),width .5s cubic-bezier(.3,.9,.3,1),height .5s cubic-bezier(.3,.9,.3,1),transform .5s,border-radius .5s,box-shadow .5s}'
@@ -100,6 +108,7 @@
     margin = { top: px('margintop', 36), side: px('marginside', 12), bottom: px('marginbottom', 12) };
     root.style.padding = margin.top + 'px ' + margin.side + 'px ' + (margin.bottom + 56) + 'px';
     h('div', 'sn-none', root).textContent = L('No notes');
+    deckN = h('div', 'sn-deck-n', root);
   }
   var pad = h('div', 'sn-pad sn-c' + (OVERLAY ? C.corner : 3), root), count = null;
   button(pad, 'sn-p', L('New note'), ICONS.plus, addNote);
@@ -175,6 +184,37 @@
     return { W: W, H: H, m: m, pw: pw, ph: ph, left: clamp(n.x * W - pw / 2, 4, W - pw - 4), top: clamp(n.y * H - ph / 2, 4, H - ph - 4) };
   }
 
+  /** Auf der schmalen Kachel liegen die Zettel als Kartenstoss; breiter bleibt es beim Raster. */
+  function deckFits() {
+    return !OVERLAY && notes.length > 0 && (w.innerWidth - margin.side * 2) < DECK_W;
+  }
+
+  /** Geblaettert wird erst ab zwei Zetteln: bei einem gaebe es nichts zu blaettern, ein Tipp schlaegt ihn auf. */
+  function leafs() { return deck && notes.length > 1; }
+
+  /** Platz des Stosses: der vorderste Zettel mittig, der Versatz der hinteren ist schon eingerechnet. */
+  function deckBox() {
+    var span = DECK_BACK * DECK_PEEK;
+    var cw = w.innerWidth - margin.side * 2, ch = w.innerHeight - margin.top - margin.bottom - 56;
+    var size = clamp(Math.min(cw, ch) - span - 12, MIN_PX, DECK_MAX);
+    return { size: size, left: margin.side + span + (cw - span - size) / 2, top: margin.top + span + (ch - span - size) / 2 };
+  }
+
+  /** Reihenfolge im Stoss: der zuletzt angefasste Zettel zuerst. */
+  function deckOrder() {
+    return notes.slice().sort(function (a, b) { return (b.z || 0) - (a.z || 0); });
+  }
+
+  /** Tippen im Stoss: der vorderste wandert nach hinten, ein Zettel weiter hinten kommt nach vorn. */
+  function leaf(id) {
+    var order = deckOrder(), at = -1;
+    order.forEach(function (n, i) { if (n.id === id) at = i; });
+    if (at < 0 || !order.length) return;
+    deckIndex = at === deckIndex ? (deckIndex + 1) % order.length : at;
+    fly();
+    render();
+  }
+
   /** Für einen Moment gleiten die Zettel an ihren neuen Platz (Stapel oder Brett), statt zu springen. */
   var flyTimer = 0;
   function fly() {
@@ -183,7 +223,7 @@
     flyTimer = w.setTimeout(function () { root.classList.remove('sn-fly'); }, 900);
   }
 
-  function paint(el, n, rank) {
+  function paint(el, n, rank, depth) {
     var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow;
     el.style.background = 'linear-gradient(180deg,' + pair[0] + ',' + pair[1] + ')';
     el.classList.toggle('sn-active', isActive);
@@ -212,9 +252,24 @@
       // Beim Bearbeiten gerade: so stimmen Zeiger und Linien überein
       el.style.transform = isActive ? '' : 'rotate(' + (n.rot || 0) + 'deg)';
       el.classList.toggle('sn-below', g.top < 60);
+    } else if (depth >= 0 && !isActive) {
+      // Kartenstoss: der vorderste Zettel ganz sichtbar, die uebrigen versetzt und leicht verdreht dahinter
+      var box = deckBox(), off = Math.min(depth, DECK_BACK) * DECK_PEEK;
+      el.style.order = '';
+      el.style.left = (box.left - off) + 'px';
+      el.style.top = (box.top - off) + 'px';
+      el.style.right = el.style.bottom = '';
+      el.style.width = el.style.height = box.size + 'px';
+      el.style.zIndex = String(notes.length - depth);
+      el.style.transform = 'rotate(' + (depth ? ((depth * 37) % 11) - 5 : (n.rot || 0) / 3) + 'deg)';
+      el.style.setProperty('--sn-d', Math.min(depth, 6) * 20 + 'ms');
+      el.classList.remove('sn-below');
     } else {
+      // Raster, oder der aufgeschlagene Zettel ueber der ganzen Kachel. Was der Stoss gesetzt hat, faellt hier weg.
       el.style.order = String(-rank);
       el.style.transform = isActive ? '' : 'rotate(' + (n.rot || 0) / 2 + 'deg)';
+      el.style.width = el.style.height = '';
+      el.style.zIndex = '';
       el.style.left = el.style.right = isActive ? margin.side + 'px' : '';
       el.style.top = isActive ? margin.top + 'px' : '';
       el.style.bottom = isActive ? margin.bottom + 'px' : '';
@@ -239,10 +294,16 @@
   }
 
   function render() {
-    var seen = {};
+    var seen = {}, depths = {};
+    deck = deckFits();
+    if (deck) {
+      var order = deckOrder();
+      deckIndex = ((deckIndex % order.length) + order.length) % order.length;
+      order.forEach(function (n, i) { depths[n.id] = (i - deckIndex + order.length) % order.length; });
+    }
     notes.slice().sort(function (a, b) { return (a.z || 0) - (b.z || 0); }).forEach(function (n, rank) {
       seen[n.id] = true;
-      paint(els[n.id] || (els[n.id] = build(n.id)), n, rank);
+      paint(els[n.id] || (els[n.id] = build(n.id)), n, rank, deck ? depths[n.id] : -1);
     });
     Object.keys(els).forEach(function (id) {
       if (seen[id]) return;
@@ -253,7 +314,13 @@
     root.classList.toggle('sn-collapsed', collapsed);
     root.classList.toggle('sn-pile', collapsed && notes.length > 0);
     root.classList.toggle('sn-empty', !notes.length);
+    root.classList.toggle('sn-deck', deck);
     if (count) count.textContent = notes.length ? String(notes.length) : '';
+    if (deckN) {
+      var show = deck && !active && notes.length > 1;
+      deckN.textContent = show ? (deckIndex + 1) + ' / ' + notes.length : '';
+      if (show) { var b = deckBox(); deckN.style.top = (b.top + b.size + 8) + 'px'; }
+    }
   }
 
   // ── Bedienen ──
@@ -279,9 +346,13 @@
   function startDrag(ev, el, id) {
     var n = find(id), g = geometry(n), sx = ev.clientX, sy = ev.clientY, moved = false, frame = 0;
     var left = g.left, top = g.top, rot = active === id ? 0 : (n.rot || 0);
+    // Im Stoss blaettert ein Tipp weiter; aufgeschlagen wird mit langem Druck, sonst waere kein Platz fuer beides
+    var hold = 0, held = false;
+    if (leafs() && active !== id) hold = w.setTimeout(function () { held = true; hold = 0; activate(id); }, 450);
     gesture = id;
     follow(el._body, ev, function (e) {
       var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (hold && Math.abs(dx) + Math.abs(dy) > 10) { w.clearTimeout(hold); hold = 0; }
       if (!OVERLAY || (!moved && Math.abs(dx) + Math.abs(dy) < 7)) return;
       if (!moved) { moved = true; el.style.willChange = 'transform'; }
       left = clamp(g.left + dx, 4, g.W - g.pw - 4);
@@ -293,8 +364,14 @@
       });
     }, function () {
       w.cancelAnimationFrame(frame);
+      if (hold) { w.clearTimeout(hold); hold = 0; }
       el.style.willChange = '';
-      if (!moved) { if (active !== id) activate(id); return; }
+      if (held) return; // der lange Druck hat den Zettel schon aufgeschlagen
+      if (!moved) {
+        if (leafs() && active !== id) return leaf(id);
+        if (active !== id) activate(id);
+        return;
+      }
       n.x = clamp((left + g.pw / 2) / g.W, 0, 1);
       n.y = clamp((top + g.ph / 2) / g.H, 0, 1);
       touch(n, 'place');
@@ -407,6 +484,7 @@
     for (var i = 0; i < 4; i++) id += ('0' + bytes[i].toString(16)).slice(-2);
     notes.push({ id: id, text: '', color: lastColor, x: 0.5 + (r() - 0.5) * 0.2, y: 0.45 + (r() - 0.5) * 0.2, w: 0.26, h: 0.26,
       rot: Math.round((r() * 6 - 3) * 10) / 10, z: maxZ() + 1, strokes: [] });
+    deckIndex = 0; // hoechstes z: im Stoss liegt der neue Zettel vorn
     activate(id);
   }
 
@@ -428,7 +506,8 @@
   w.addEventListener('pointerdown', function (ev) {
     if (active && els[active] && !els[active].contains(ev.target)) deactivate();
   }, true);
-  if (OVERLAY) w.addEventListener('resize', render);
+  // Auch die Kachel: ihre Breite entscheidet zwischen Raster und Stoss
+  w.addEventListener('resize', render);
 
   // ── Abgleich mit dem Modul ──
   function post(body) {
