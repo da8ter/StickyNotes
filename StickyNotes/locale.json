@@ -34,7 +34,19 @@
             "Invalid text": "Ungültiger Text",
             "Invalid color": "Ungültige Farbe",
             "Invalid handwriting": "Ungültige Handschrift",
-            "Too much handwriting on this note": "Zu viel Handschrift auf diesem Zettel"
+            "Too much handwriting on this note": "Zu viel Handschrift auf diesem Zettel",
+            "Stickers": "Sticker",
+            "Image": "Bild",
+            "Name": "Name",
+            "Images from media objects can be placed on the board as stickers. Set them up here; they then appear as a choice at the plus button. Supported: PNG, JPEG, GIF, WebP and BMP up to 900 kB.": "Bilder aus Medienobjekten lassen sich als Sticker aufs Brett legen. Hier werden sie eingerichtet und erscheinen dann als Auswahl am Plus-Knopf. Möglich sind PNG, JPEG, GIF, WebP und BMP bis 900 kB.",
+            "Note": "Zettel",
+            "Sticker": "Sticker",
+            "Invalid sticker": "Ungültiger Sticker",
+            "Unknown sticker": "Dieser Sticker ist nicht eingerichtet",
+            "This media object does not exist.": "Dieses Medienobjekt gibt es nicht.",
+            "Only images can be used as stickers.": "Als Sticker eignen sich nur Bilder.",
+            "This image format cannot be delivered: PNG, JPEG, GIF, WebP or BMP.": "Dieses Bildformat lässt sich nicht ausliefern: PNG, JPEG, GIF, WebP oder BMP.",
+            "This image is too large (900 kB at most).": "Dieses Bild ist zu groß (höchstens 900 kB)."
         }
     }
 }

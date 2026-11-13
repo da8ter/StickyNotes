@@ -7,6 +7,8 @@ declare(strict_types=1);
  * Ein Zettel: id, text, color, x/y (Mitte, Anteil am Fenster), w/h (Anteil an der kürzeren Fensterseite),
  * rot (Grad), z (Reihenfolge), strokes (Handschrift als Linien: Stiftfarbe c, Punkte p = x0,y0,x1,y1,… in 0..1000
  * bezogen auf den Zettel), rev, ts.
+ * Ein Sticker ist derselbe Datensatz mit img = Medien-ID eines eingerichteten Bildes: gleiche Lage, gleicher Abgleich,
+ * nur ohne Papier, Text und Handschrift. Ob die ID eingerichtet ist, weiß nur das Modul (Symcon), nicht diese Datei.
  */
 final class NoteStore
 {
@@ -20,7 +22,7 @@ final class NoteStore
     public const COLORS = ['yellow', 'pink', 'green', 'blue'];
     public const PENS = 6;
     // Die zwei Teile eines Zettels: Kachel und Visu speichern nur den, den sie geändert haben
-    private const PARTS = ['place' => ['x', 'y', 'w', 'h', 'rot', 'z'], 'content' => ['text', 'color', 'strokes']];
+    private const PARTS = ['place' => ['x', 'y', 'w', 'h', 'rot', 'z'], 'content' => ['text', 'color', 'strokes', 'img']];
 
     public static function IsId(mixed $id): bool
     {
@@ -71,6 +73,11 @@ final class NoteStore
         if (strlen((string) json_encode($strokes)) > self::MAX_INK_BYTES) {
             return 'Too much handwriting on this note';
         }
+        // Medien-ID eines Stickers; 0 = gewoehnlicher Zettel. Gegen die eingerichtete Liste prueft das Modul.
+        $img = $in['img'] ?? 0;
+        if (!is_int($img) || $img < 0) {
+            return 'Invalid sticker';
+        }
         $number = static fn (string $key, float $default, float $min, float $max): float
             => is_int($in[$key] ?? null) || is_float($in[$key] ?? null) ? round(min($max, max($min, (float) $in[$key])), 4) : $default;
         return [
@@ -84,6 +91,7 @@ final class NoteStore
             'rot'     => $number('rot', 0.0, -6.0, 6.0),
             'z'       => (int) $number('z', 0.0, 0.0, 1e9),
             'strokes' => $strokes,
+            'img'     => $img,
         ];
     }
 
@@ -129,6 +137,6 @@ final class NoteStore
             $z = max($z, (int) $note['z']);
         }
         return ['id' => self::NewId(), 'text' => $text, 'color' => $color, 'x' => 0.3 + ($n % 5) * 0.1, 'y' => 0.3 + ($n % 4) * 0.12,
-            'w' => 0.26, 'h' => 0.26, 'rot' => (($n * 37) % 7) - 3, 'z' => $z + 1, 'strokes' => []];
+            'w' => 0.26, 'h' => 0.26, 'rot' => (($n * 37) % 7) - 3, 'z' => $z + 1, 'strokes' => [], 'img' => 0];
     }
 }

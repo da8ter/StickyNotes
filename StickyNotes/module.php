@@ -14,7 +14,12 @@ class StickyNotes extends IPSModuleStrict
     private const HOOK = 'sticky';
     private const COLOR_NAMES = ['gelb' => 'yellow', 'rosa' => 'pink', 'grün' => 'green', 'gruen' => 'green', 'blau' => 'blue'];
     private const LABELS = ['New note', 'Show or hide notes', 'Type', 'Write by hand', 'Undo last stroke', 'Pen color', 'Note color',
-        'Tear off', 'Tear off?', 'Done', 'The board is full', 'No notes'];
+        'Tear off', 'Tear off?', 'Done', 'The board is full', 'No notes', 'Note', 'Sticker'];
+    // Sticker werden ueber den Hook ausgeliefert; nur diese Typen, kein SVG (es kann Skripte tragen)
+    private const IMAGE_TYPES = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif', 'webp' => 'image/webp', 'bmp' => 'image/bmp'];
+    // Der Hook liefert hoechstens 1 MiB aus; darueber ersetzt Symcon die Antwort
+    private const MAX_STICKER_BYTES = 900000;
     private const JSON = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
 
     public function Create(): void
@@ -23,6 +28,7 @@ class StickyNotes extends IPSModuleStrict
         $this->RegisterPropertyBoolean('Overlay', true);
         $this->RegisterPropertyInteger('Corner', 3);
         $this->RegisterPropertyInteger('PollSeconds', 3);
+        $this->RegisterPropertyString('Stickers', '[]');
         $this->RegisterAttributeString('Notes', '[]');
         $this->RegisterAttributeInteger('Seq', 0);
         $this->RegisterAttributeString('HookToken', '');
@@ -110,6 +116,18 @@ class StickyNotes extends IPSModuleStrict
     public function GetConfigurationForm(): string
     {
         $form = json_decode((string) file_get_contents(__DIR__ . '/form.json'), true);
+        // Ein Sticker, der nicht ausgeliefert werden kann, taucht gar nicht erst in der Auswahl auf: hier steht warum
+        $problems = [];
+        foreach (json_decode($this->ReadPropertyString('Stickers'), true) ?: [] as $row) {
+            $id = is_array($row) ? (int) ($row['Media'] ?? 0) : 0;
+            $why = $id > 0 ? $this->StickerProblem($id) : '';
+            if ($why !== '') {
+                $problems[] = ($id > 0 && IPS_MediaExists($id) ? IPS_GetName($id) : '#' . $id) . ': ' . $this->Translate($why);
+            }
+        }
+        if ($problems !== []) {
+            array_unshift($form['elements'], ['type' => 'Label', 'caption' => implode("\n", array_unique($problems))]);
+        }
         $base = $this->HookBase();
         // Verbindungsadresse für die Browser-Erweiterung „Visu-Erweiterung für Symcon“, ohne Host
         if ($base !== '') {
@@ -125,6 +143,7 @@ class StickyNotes extends IPSModuleStrict
      *   k=agent.js            Zettel-Skript für das Fenster der Visu (nur mit „Zettel über der Visu“); lädt die Erweiterung oder die Kachel
      *   k=poll&since=<seq>    Stand; die Zettel nur, wenn sich seit <seq> etwas geändert hat
      *   k=save  (POST, JSON)  {op: put, note, part?: place|content} | {op: del, id}; antwortet mit dem Stand
+     *   k=img&m=<MedienID>    Bild eines eingerichteten Stickers; alles andere bleibt unerreichbar
      */
     protected function ProcessHookData(): void
     {
@@ -134,10 +153,12 @@ class StickyNotes extends IPSModuleStrict
             $this->SendStatus(403);
             return;
         }
+        $key = isset($_GET['k']) && is_string($_GET['k']) ? $_GET['k'] : '';
         $this->SendHeader('X-Content-Type-Options: nosniff');
-        $this->SendHeader('Cache-Control: no-store');
+        // Sticker aendern sich selten und kosten sonst bei jedem Bild einen Abruf
+        $this->SendHeader($key === 'img' ? 'Cache-Control: private, max-age=300' : 'Cache-Control: no-store');
         $overlay = $this->ReadPropertyBoolean('Overlay');
-        switch (isset($_GET['k']) && is_string($_GET['k']) ? $_GET['k'] : '') {
+        switch ($key) {
             case 'ext':
                 $this->SendHeader('Content-Type: application/json; charset=utf-8');
                 echo json_encode([
@@ -160,6 +181,17 @@ class StickyNotes extends IPSModuleStrict
                 $this->SendHeader('Content-Type: application/json; charset=utf-8');
                 echo json_encode($this->State($since), self::JSON);
                 return;
+            case 'img':
+                $id = isset($_GET['m']) && is_numeric($_GET['m']) ? (int) $_GET['m'] : 0;
+                $type = $this->IsSticker($id) ? $this->StickerType($id) : '';
+                $bytes = $type === '' ? '' : (string) base64_decode(IPS_GetMediaContent($id), true);
+                if ($type === '' || $bytes === '' || strlen($bytes) > self::MAX_STICKER_BYTES) {
+                    $this->SendStatus(404);
+                    return;
+                }
+                $this->SendHeader('Content-Type: ' . $type);
+                echo $bytes;
+                return;
             case 'save':
                 $in = json_decode($this->Input(), true);
                 $error = null;
@@ -170,6 +202,9 @@ class StickyNotes extends IPSModuleStrict
                 if (($in['op'] ?? '') === 'put') {
                     $note = NoteStore::Normalize($in['note'] ?? null);
                     $part = is_string($in['part'] ?? null) ? $in['part'] : '';
+                    if (!is_string($note) && $note['img'] > 0 && !$this->IsSticker($note['img'])) {
+                        $note = 'Unknown sticker';
+                    }
                     $error = is_string($note) ? $note : $this->Mutate(static function (array $list) use ($note, $part): array {
                         [$next, $failed] = NoteStore::Put($list, $note, time(), $part);
                         return $failed === null ? [$next, null] : [$list, $failed];
@@ -211,6 +246,58 @@ class StickyNotes extends IPSModuleStrict
     }
 
     // ── Intern ──
+
+    /** Die eingerichteten Sticker: nur vorhandene Bild-Medien in einem auslieferbaren Format, ohne Dubletten. */
+    private function Stickers(): array
+    {
+        $rows = json_decode($this->ReadPropertyString('Stickers'), true);
+        $out = [];
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $id = is_array($row) ? (int) ($row['Media'] ?? 0) : 0;
+            if ($id <= 0 || isset($out[$id]) || $this->StickerProblem($id) !== '') {
+                continue;
+            }
+            $name = is_array($row) && is_string($row['Name'] ?? null) && trim($row['Name']) !== '' ? trim($row['Name']) : IPS_GetName($id);
+            $out[$id] = ['m' => $id, 'n' => mb_substr($name, 0, 60)];
+        }
+        return array_values($out);
+    }
+
+    private function IsSticker(int $id): bool
+    {
+        foreach ($this->Stickers() as $sticker) {
+            if ($sticker['m'] === $id) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Warum sich ein Medienobjekt nicht als Sticker eignet, als englischer Schluessel; '' heisst: es geht. */
+    private function StickerProblem(int $id): string
+    {
+        if ($id <= 0 || !IPS_MediaExists($id)) {
+            return 'This media object does not exist.';
+        }
+        $media = IPS_GetMedia($id);
+        if ((int) $media['MediaType'] !== MEDIATYPE_IMAGE) {
+            return 'Only images can be used as stickers.';
+        }
+        if ($this->StickerType($id) === '') {
+            return 'This image format cannot be delivered: PNG, JPEG, GIF, WebP or BMP.';
+        }
+        // MediaSize ist die rohe Groesse; der Hook liefert hoechstens 1 MiB aus
+        if ((int) ($media['MediaSize'] ?? 0) > self::MAX_STICKER_BYTES) {
+            return 'This image is too large (900 kB at most).';
+        }
+        return '';
+    }
+
+    /** Inhaltstyp eines Bild-Medienobjekts, oder '' wenn das Format nicht ausgeliefert wird. */
+    private function StickerType(int $id): string
+    {
+        return self::IMAGE_TYPES[strtolower(pathinfo((string) IPS_GetMedia($id)['MediaFile'], PATHINFO_EXTENSION))] ?? '';
+    }
 
     private function Load(): array
     {
@@ -270,6 +357,8 @@ class StickyNotes extends IPSModuleStrict
             'pollMs' => min(60, max(1, $this->ReadPropertyInteger('PollSeconds'))) * 1000,
             'corner' => min(3, max(0, $this->ReadPropertyInteger('Corner'))),
             'max'    => NoteStore::MAX_NOTES,
+            // Auswahl am Plus-Knopf; das Bild holt der Browser ueber k=img
+            'stickers' => $this->Stickers(),
             'labels' => $labels,
             'state'  => $this->State(-1),
         ];

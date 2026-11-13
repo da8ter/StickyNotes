@@ -9,6 +9,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 - Drei Stiftfarben, letzter Strich zurück
 - Zettelblock in einer Bildschirmecke: neuer Zettel, alle Zettel ein- und ausblenden
 - Gleicher Stand auf allen Bildschirmen
+- Sticker: Bilder aus Medienobjekten frei auf dem Brett platzieren, verschieben und in der Größe ändern
 - Zettel aus Skripten ankleben und abnehmen
 - Kachel mit allen Zetteln als Brett, für die Symcon-App; auf einer schmalen Kachel als Kartenstoß zum Durchblättern
 - Runder Knopf für einen neuen Zettel in der Akzentfarbe der Visualisierung
@@ -23,6 +24,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 ## Einrichten
 
 1. Instanz „Klebezettel“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
+   Für Sticker in der Liste „Sticker“ die gewünschten Medienobjekte eintragen.
 2. Mit Erweiterung: Im Formular der Instanz die „Adresse für die Browser-Erweiterung“ kopieren.
 3. In den Einstellungen der Erweiterung eine Verbindung anlegen: Adresse des Symcon-Servers, gefolgt von der kopierten Adresse.
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
@@ -40,10 +42,13 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 | Farbe wechseln | Farbpunkt |
 | Abreißen | Mülleimer zweimal antippen |
 | Alle Zettel aus- und einblenden | Stapel am Zettelblock |
+| Zettel oder Sticker anlegen | Plus-Knopf; sind Sticker eingerichtet, erscheint erst die Auswahl |
 | Im Kartenstoß blättern | Zettel antippen |
 | Zettel im Kartenstoß öffnen | Zettel gedrückt halten |
 
 Zum Bearbeiten wird ein Zettel in der Kachel groß und mittig aufgeschlagen; er behält dabei sein Seitenverhältnis, damit Handschrift und Text genauso stehen wie in der kleinen Ansicht. Die übrigen Zettel treten so lange zurück.
+
+**Sticker** sind Bilder aus Medienobjekten. Sie werden in der Konfiguration eingerichtet und erscheinen dann als Auswahl am Plus-Knopf, neben dem gewöhnlichen Zettel. Ein Sticker liegt wie ein Zettel auf dem Brett: verschieben, Größe ändern, abreißen. Er trägt keinen Text und keine Handschrift. Möglich sind PNG, JPEG, GIF, WebP und BMP bis 900 kB; freigestellte Bilder (PNG mit Transparenz) wirken am besten, denn der Schatten folgt der Form. Bilder, die sich nicht verwenden lassen, nennt die Konfigurationsseite mit dem Grund und tauchen gar nicht erst in der Auswahl auf.
 
 Auf einer schmalen Kachel liegen die Zettel als Kartenstoß übereinander statt nebeneinander: der vorderste groß in der Mitte, die übrigen schauen dahinter hervor, darunter steht die Stelle im Stoß. Ein Tipp blättert weiter, ein Tipp auf einen hinteren Zettel holt ihn nach vorn, langes Drücken öffnet den vordersten. Wird die Kachel breiter gezogen, wechselt sie von selbst zurück zum Brett. Bei einem einzigen Zettel gibt es nichts zu blättern — er füllt die Kachel und öffnet sich beim Antippen.
 

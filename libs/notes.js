@@ -65,6 +65,21 @@
     + '.sn-ink{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}'
     + '.sn-ink path{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:max(1.5px,1.5cqh);vector-effect:non-scaling-stroke}'
     + '.sn-draw{cursor:crosshair}'
+    // Sticker: kein Papier, kein Kopfstreifen; der Schatten folgt der Freistellung des Bildes
+    + '.sn-sticker{box-shadow:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.35));border-radius:0}'
+    + '.sn-sticker .sn-body::before,.sn-sticker .sn-text{display:none}'
+    + '.sn-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-drag:none}'
+    // Auswahl am Plus-Knopf: Zettel und die eingerichteten Sticker
+    + '.sn-pick{position:absolute;display:none;flex-wrap:wrap;gap:8px;padding:10px;border-radius:14px;background:rgba(28,28,30,.94);'
+    + 'box-shadow:0 8px 20px rgba(0,0,0,.4);width:max-content;max-width:min(232px,calc(100vw - 28px));z-index:2147483002}'
+    + '.sn-tile .sn-pick{z-index:6}.sn-pad.sn-picking .sn-pick{display:flex}'
+    + '.sn-c0 .sn-pick,.sn-c1 .sn-pick{top:100%}.sn-c2 .sn-pick,.sn-c3 .sn-pick{bottom:100%}'
+    + '.sn-c0 .sn-pick,.sn-c2 .sn-pick{left:12px}.sn-c1 .sn-pick,.sn-c3 .sn-pick{right:12px}'
+    + '.sn-pick .sn-i{width:46px;height:46px;border:0;padding:0;border-radius:10px;background:rgba(255,255,255,.14);cursor:pointer;'
+    + 'display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation}'
+    + '.sn-pick .sn-i img{width:100%;height:100%;object-fit:contain}'
+    + '.sn-pick .sn-i.sn-paper{background:linear-gradient(180deg,#fff48f,#ffe95c);border-radius:3px 3px 11px 3px;color:#1f2933}'
+    + '.sn-pick .sn-i.sn-paper svg{width:20px;height:20px}'
     + '.sn-tools{position:absolute;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);display:none;gap:2px;padding:4px;border-radius:24px;'
     + 'background:rgba(28,28,30,.94);box-shadow:0 6px 16px rgba(0,0,0,.35);flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100vw - 16px);z-index:3}'
     + '.sn-active .sn-tools{display:flex}.sn-below .sn-tools{bottom:auto;top:calc(100% + 8px)}'
@@ -117,9 +132,26 @@
     deckN = h('div', 'sn-deck-n', root);
   }
   var pad = h('div', 'sn-pad sn-c' + (OVERLAY ? C.corner : 2), root), count = null;
-  button(pad, 'sn-p', L('New note'), ICONS.plus, addNote);
+  // Sind Sticker eingerichtet, fragt der Plus-Knopf erst, was es sein soll
+  var stickers = Array.isArray(C.stickers) ? C.stickers : [];
+  var pick = h('div', 'sn-pick', pad);
+  function closePick() { pad.classList.remove('sn-picking'); }
+  button(pad, 'sn-p', L('New note'), ICONS.plus, function () {
+    if (!stickers.length) return addNote(0);
+    pad.classList.toggle('sn-picking');
+  });
+  if (stickers.length) {
+    button(pick, 'sn-i sn-paper', L('Note'), ICONS.plus, function () { closePick(); addNote(0); });
+    stickers.forEach(function (st) {
+      var b = button(pick, 'sn-i', st.n || L('Sticker'), '', function () { closePick(); addNote(st.m); });
+      var im = h('img', '', b);
+      im.alt = '';
+      im.setAttribute('src', C.hook + '&k=img&m=' + st.m);
+    });
+  }
   if (OVERLAY) {
     var toggle = button(pad, 'sn-p sn-toggle', L('Show or hide notes'), ICONS.stack, function () {
+      closePick();
       if (active) deactivate();
       collapsed = !collapsed;
       store('collapsed', collapsed ? '1' : '0');
@@ -138,6 +170,8 @@
     el.setAttribute('data-id', id);
     el._body = h('div', 'sn-body', el);
     el._text = h('div', 'sn-text', el._body);
+    el._img = h('img', 'sn-img', el._body);
+    el._img.alt = '';
     el._ink = d.createElementNS('http://www.w3.org/2000/svg', 'svg');
     el._ink.setAttribute('class', 'sn-ink'); el._ink.setAttribute('viewBox', '0 0 1000 1000'); el._ink.setAttribute('preserveAspectRatio', 'none');
     el._body.appendChild(el._ink);
@@ -237,8 +271,18 @@
   }
 
   function paint(el, n, rank, depth) {
-    var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow;
-    el.style.background = 'linear-gradient(180deg,' + pair[0] + ',' + pair[1] + ')';
+    var isActive = active === n.id, pair = COLORS[n.color] || COLORS.yellow, sticker = (n.img || 0) > 0;
+    el.style.background = sticker ? 'none' : 'linear-gradient(180deg,' + pair[0] + ',' + pair[1] + ')';
+    el.classList.toggle('sn-sticker', sticker);
+    // Am Sticker gibt es nichts zu tippen, zu zeichnen und keine Zettelfarbe
+    [el._type, el._drawB, el._colorB].concat(el._pens).forEach(function (b) { b.style.display = sticker ? 'none' : ''; });
+    el._img.style.display = sticker ? '' : 'none';
+    if (sticker) {
+      var src = C.hook + '&k=img&m=' + n.img;
+      if (el._img.getAttribute('src') !== src) el._img.setAttribute('src', src);
+    } else if (el._img.hasAttribute('src')) {
+      el._img.removeAttribute('src');
+    }
     el.classList.toggle('sn-active', isActive);
     el.classList.toggle('sn-draw', isActive && mode === 'draw');
     el._type.classList.toggle('sn-on', isActive && mode === 'text');
@@ -494,10 +538,11 @@
     active = null;
     mode = '';
     // Ein leerer Zettel bleibt nicht kleben
-    if (n && !n.text.trim() && !n.strokes.length) removeNote(id); else render();
+    // Ein Sticker traegt weder Text noch Striche und bleibt trotzdem liegen
+    if (n && !(n.img || 0) && !n.text.trim() && !n.strokes.length) removeNote(id); else render();
   }
 
-  function addNote() {
+  function addNote(img) {
     if (notes.length >= C.max) return hint(L('The board is full'));
     if (active) deactivate();
     if (collapsed) fly();
@@ -507,8 +552,9 @@
     w.crypto.getRandomValues(bytes);
     for (var i = 0; i < 4; i++) id += ('0' + bytes[i].toString(16)).slice(-2);
     notes.push({ id: id, text: '', color: lastColor, x: 0.5 + (r() - 0.5) * 0.2, y: 0.45 + (r() - 0.5) * 0.2, w: 0.26, h: 0.26,
-      rot: Math.round((r() * 6 - 3) * 10) / 10, z: maxZ() + 1, strokes: [] });
+      rot: Math.round((r() * 6 - 3) * 10) / 10, z: maxZ() + 1, strokes: [], img: img || 0 });
     deckIndex = 0; // hoechstes z: im Stoss liegt der neue Zettel vorn
+    if (img) { touch(find(id), 'all'); } // ein Sticker ist sofort fertig und wuerde sonst nie gespeichert
     activate(id);
   }
 
@@ -529,6 +575,7 @@
   // Tipp neben den aktiven Zettel: fertig
   w.addEventListener('pointerdown', function (ev) {
     if (active && els[active] && !els[active].contains(ev.target)) deactivate();
+    if (!pad.contains(ev.target)) closePick();
   }, true);
   // Auch die Kachel: ihre Breite entscheidet zwischen Raster und Stoss
   w.addEventListener('resize', render);
@@ -550,7 +597,7 @@
   function save(id) {
     var n = find(id), mark = dirty[id];
     if (!n) return;
-    post({ op: 'put', part: parts[id], note: { id: n.id, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h, rot: n.rot, z: n.z, strokes: n.strokes } }).then(function (state) {
+    post({ op: 'put', part: parts[id], note: { id: n.id, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h, rot: n.rot, z: n.z, strokes: n.strokes, img: n.img || 0 } }).then(function (state) {
       if (dirty[id] === mark) { delete dirty[id]; delete parts[id]; }
       if (state && state.error) hint(state.error);
       apply(state);
@@ -569,7 +616,7 @@
       var content = p === 'content' || p === 'all' || (active === n.id && mode), place = p === 'place' || p === 'all' || gesture === n.id;
       if (!m || (!content && !place)) return n;
       // Den Teil, den hier niemand anfasst, bestimmt das Modul: so wandert ein Zettel mit, während die Kachel ihn beschreibt
-      (content ? [] : ['text', 'color', 'strokes']).concat(place ? [] : ['x', 'y', 'w', 'h', 'rot', 'z']).forEach(function (k) { m[k] = n[k]; });
+      (content ? [] : ['text', 'color', 'strokes', 'img']).concat(place ? [] : ['x', 'y', 'w', 'h', 'rot', 'z']).forEach(function (k) { m[k] = n[k]; });
       return m;
     });
     notes.forEach(function (n) {
