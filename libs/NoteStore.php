@@ -105,7 +105,10 @@ final class NoteStore
         foreach ($list as $i => $old) {
             if ($old['id'] === $note['id']) {
                 foreach (self::PARTS[$part === 'place' ? 'content' : ($part === 'content' ? 'place' : '')] ?? [] as $key) {
-                    $note[$key] = $old[$key];
+                    // Aeltere Zettel kennen nicht jedes Feld (img kam spaeter): dann gilt der eingehende Wert
+                    if (array_key_exists($key, $old)) {
+                        $note[$key] = $old[$key];
+                    }
                 }
                 $list[$i] = $note + ['rev' => (int) ($old['rev'] ?? 0) + 1, 'ts' => $now];
                 $found = true;
