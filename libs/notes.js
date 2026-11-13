@@ -116,7 +116,7 @@
     h('div', 'sn-none', root).textContent = L('No notes');
     deckN = h('div', 'sn-deck-n', root);
   }
-  var pad = h('div', 'sn-pad sn-c' + (OVERLAY ? C.corner : 3), root), count = null;
+  var pad = h('div', 'sn-pad sn-c' + (OVERLAY ? C.corner : 2), root), count = null;
   button(pad, 'sn-p', L('New note'), ICONS.plus, addNote);
   if (OVERLAY) {
     var toggle = button(pad, 'sn-p sn-toggle', L('Show or hide notes'), ICONS.stack, function () {
