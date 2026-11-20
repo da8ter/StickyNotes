@@ -17,7 +17,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 ## Voraussetzungen
 
 - Symcon ab Version 8.1
-- Empfohlen: Chrome oder Edge mit der Browser-Erweiterung [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon). Mit ihr sind die Zettel sofort auf jeder Seite der Visualisierung da.
+- Empfohlen: Chrome oder Edge mit der [Visu-Erweiterung für Symcon](https://github.com/da8ter/VisuExtensionForSymcon) (Browser-Erweiterung mit eigenem Symcon-Modul). Mit ihr sind die Zettel sofort auf jeder Seite der Visualisierung da, und Änderungen erscheinen ohne Wartezeit.
 - Ohne die Erweiterung bringt die Kachel die Zettel in die Visualisierung. Sie erscheinen dann erst, wenn die Seite mit der Kachel geöffnet wurde, und nach jedem Neuladen der Visualisierung erst, wenn sie erneut geöffnet wurde.
 - In der Symcon-App bleiben die Zettel als Brett in der Kachel und lassen sich nicht frei verschieben.
 
@@ -25,8 +25,8 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 
 1. Instanz „Klebezettel“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
    Für Sticker in der Liste „Sticker“ die gewünschten Medienobjekte eintragen.
-2. Mit Erweiterung: Im Formular der Instanz die „Adresse für die Browser-Erweiterung“ kopieren.
-3. In den Einstellungen der Erweiterung eine Verbindung anlegen: Adresse des Symcon-Servers, gefolgt von der kopierten Adresse.
+2. Mit Erweiterung: Die Visu-Erweiterung nach ihrer Anleitung installieren (Symcon-Modul mit einer Instanz „Visu-Erweiterung“ und die Erweiterung im Browser) und den Browser dort einmal koppeln.
+3. Im Formular der Klebezettel über „Gateway ändern“ die Instanz „Visu-Erweiterung“ wählen. Die Klebezettel erscheinen dann dort unter „Angedockte Module“.
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
 
 ## Bedienen
@@ -89,7 +89,7 @@ $zettel = json_decode(STICKY_GetNotes(12345), true);
 ## Grenzen
 
 - Höchstens 30 Zettel, 600 Zeichen Text je Zettel
-- Die Adresse für die Erweiterung enthält ein Zugangswort. Wer sie kennt, kann die Zettel lesen und ändern.
+- Mit der Erweiterung läuft das Zettel-Skript in jedem Browser, der mit der Visu-Erweiterung gekoppelt und dort nicht gesperrt ist. Wer so einen Browser bedient, kann die Zettel lesen und ändern.
 
 ## Bildnachweis
 

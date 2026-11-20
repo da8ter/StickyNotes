@@ -1,5 +1,6 @@
-/* Klebezettel im Fenster der Visualisierung (mode "overlay", geladen von der Browser-Erweiterung
- * „Visu-Erweiterung für Symcon“ über den Hook k=agent.js, ohne sie von der Kachel) und als Brett in der Kachel (mode "tile").
+/* Klebezettel im Fenster der Visualisierung (mode "overlay": ausgeliefert vom Symcon-Modul „Visu-Erweiterung“,
+ * an das die Instanz andockt, und geladen von dessen Browser-Erweiterung; ohne sie von der Kachel über den
+ * Hook k=agent.js) und als Brett in der Kachel (mode "tile").
  *
  * Die Visu ist eine Flutter-Fläche; eigene Elemente am body liegen immer darüber und ihre Zeiger- und
  * Tastenereignisse erreichen die Visu nicht (gemessen 10.11.2026). Lesen und Schreiben über den Hook:
@@ -636,10 +637,14 @@
   }
 
   if (OVERLAY) {
-    w.setInterval(function () {
+    var poll = function () {
       if (d.hidden) return;
       w.fetch(C.hook + '&k=poll&since=' + seq, { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : null; }).then(apply, function () { /* nächster Versuch */ });
-    }, C.pollMs);
+    };
+    w.setInterval(poll, C.pollMs);
+    // Kanal der Visu-Erweiterung: Das Modul meldet eine Änderung, das Overlay fragt sofort statt im Takt.
+    // Die Laufzeit kommt über die Warteliste; ohne sie (Overlay von der Kachel geladen) bleibt es beim Takt.
+    (w.visuExtReady = w.visuExtReady || []).push(function (ext) { ext.on(C.instance, poll); });
   } else {
     // Die Kachel bekommt Änderungen vom Modul geschickt
     w.handleMessage = function (data) {

@@ -80,7 +80,7 @@
     "actions": [
         {
             "type": "Label",
-            "caption": "The browser extension \"Visu-Erweiterung für Symcon\" (Chrome, Edge) shows the notes right away on every page of the visualization. To use it, connect the extension with the address below, with your server address in front."
+            "caption": "The \"Visu-Erweiterung für Symcon\" (browser extension for Chrome and Edge with its own Symcon module) shows the notes right away on every page of the visualization. To use it, connect this instance to an instance \"Visu Extension\" (change gateway) and pair your browser there."
         },
         {
             "type": "Label",
