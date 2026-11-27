@@ -156,19 +156,11 @@ class StickyNotes extends IPSModuleStrict
         // Die Browser-Erweiterung läuft über die Instanz „Visu-Erweiterung“, an die diese Instanz andockt
         $form['actions'] = array_merge($form['actions'], $this->DockFormItems(
             'This instance is docked onto the Visu Extension: browsers paired there show the notes on every page.',
-            'This instance is not docked onto the Visu Extension.'));
+            'This instance is not docked onto the Visu Extension (change gateway).'));
         return (string) json_encode($form, self::JSON);
     }
 
     // ── Andocken an die Visu-Erweiterung (freiwillig, libs/VisuDock.php) ──
-
-    public function RequestAction(string $Ident, mixed $Value): void
-    {
-        if ($Ident !== 'VisuDock') {
-            throw new \InvalidArgumentException('Invalid ident');
-        }
-        $this->VisuDock((bool) $Value);
-    }
 
     /**
      * Anfragen der Visu-Erweiterung; die Rückgabe ist die Antwort.
