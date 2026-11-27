@@ -28,7 +28,7 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 1. Instanz „Klebezettel“ anlegen. Ohne Erweiterung genügt das: die Seite mit der Kachel öffnen.
    Für Sticker in der Liste „Sticker“ die gewünschten Medienobjekte eintragen.
 2. Mit Erweiterung: Die Visu-Erweiterung nach ihrer Anleitung installieren (Symcon-Modul mit einer Instanz „Visu-Erweiterung“ und die Erweiterung im Browser) und den Browser dort einmal koppeln.
-3. Im Formular der Klebezettel über „Gateway ändern“ die Instanz „Visu-Erweiterung“ wählen. Die Klebezettel erscheinen dann dort unter „Angedockte Module“.
+3. Im Formular der Klebezettel unten auf „An die Visu-Erweiterung andocken“ klicken. Die Klebezettel erscheinen dann dort unter „Angedockte Module“.
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
 
 ## Bedienen

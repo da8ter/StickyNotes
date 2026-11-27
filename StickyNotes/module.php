@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../libs/NoteStore.php';
+require_once __DIR__ . '/../libs/VisuDock.php';
 
 /**
  * Klebezettel, die frei über der Visualisierung liegen (über die „Visu-Erweiterung für Symcon“, an
@@ -11,6 +12,8 @@ require_once __DIR__ . '/../libs/NoteStore.php';
  */
 class StickyNotes extends IPSModuleStrict
 {
+    use VisuDockTrait;
+
     private const HOOK = 'sticky';
     // Andocken an das Modul „Visu-Erweiterung“ (Datenfluss): diese Instanz → Visu-Erweiterung und zurück
     private const DOCK_TX = '{A5B87602-1C34-4981-89A5-62A0735CB359}';
@@ -150,18 +153,20 @@ class StickyNotes extends IPSModuleStrict
             array_unshift($form['elements'], ['type' => 'Label', 'caption' => implode("\n", array_unique($problems))]);
         }
         // Die Browser-Erweiterung läuft über die Instanz „Visu-Erweiterung“, an die diese Instanz andockt
-        $form['actions'][] = ['type' => 'Label', 'caption' => $this->Docked()
-            ? 'This instance is docked onto the Visu Extension: browsers paired there show the notes on every page.'
-            : 'This instance is not connected to an instance "Visu Extension" yet (change gateway).'];
+        $form['actions'] = array_merge($form['actions'], $this->DockFormItems(
+            'This instance is docked onto the Visu Extension: browsers paired there show the notes on every page.',
+            'This instance is not docked onto the Visu Extension.'));
         return (string) json_encode($form, self::JSON);
     }
 
-    // ── Andocken an die Visu-Erweiterung ──
+    // ── Andocken an die Visu-Erweiterung (freiwillig, libs/VisuDock.php) ──
 
-    /** An eine vorhandene Instanz „Visu-Erweiterung“ anschließen; ohne sie bringt die Kachel die Zettel in die Visu. */
-    public function GetCompatibleParents(): string
+    public function RequestAction(string $Ident, mixed $Value): void
     {
-        return (string) json_encode(['type' => 'connect', 'moduleIDs' => [self::VISU_EXTENSION]]);
+        if ($Ident !== 'VisuDock') {
+            throw new \InvalidArgumentException('Invalid ident');
+        }
+        $this->VisuDock((bool) $Value);
     }
 
     /**
