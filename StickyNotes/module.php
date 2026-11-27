@@ -54,6 +54,7 @@ class StickyNotes extends IPSModuleStrict
         $this->RegisterAttributeString('Notes', '[]');
         $this->RegisterAttributeInteger('Seq', 0);
         $this->RegisterAttributeString('HookToken', '');
+        $this->RegisterDockAttributes();
 
         $this->RegisterVariableInteger('Count', $this->Translate('Notes'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
