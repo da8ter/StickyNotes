@@ -1,12 +1,14 @@
 # Klebezettel
 
+![Klebezettel — über der Visualisierung](https://raw.githubusercontent.com/da8ter/images/main/Klebezettel%20Visu.png)
+
 Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei über der ganzen Visualisierung, auf jeder Seite und auf jedem verbundenen Bildschirm an derselben Stelle. Geschrieben wird mit der Tastatur oder mit dem Finger.
 
 ## Funktionen
 
 - Zettel in vier Farben, frei verschiebbar und in der Größe änderbar
 - Text tippen und mit der Hand schreiben oder zeichnen, auch beides auf einem Zettel
-- Drei Stiftfarben, letzter Strich zurück
+- Sechs Stiftfarben, letzter Strich zurück
 - Zettelblock in einer Bildschirmecke: neuer Zettel, alle Zettel ein- und ausblenden
 - Gleicher Stand auf allen Bildschirmen
 - Sticker: 40 eingebaute Bilder (Herz, Stern, Daumen hoch, Kaffee, Geschenk …) und eigene Bilder aus Medienobjekten frei auf dem Brett platzieren, verschieben und in der Größe ändern
@@ -30,6 +32,10 @@ Klebezettel für die Kachel-Visualisierung von Symcon. Die Zettel liegen frei ü
 4. Die Visualisierung neu laden. In der gewählten Ecke erscheint der Zettelblock.
 
 ## Bedienen
+
+![Klebezettel — Zettel mit Stift bearbeiten](https://raw.githubusercontent.com/da8ter/images/main/Klebezettel%20Handschrift.png)
+
+![Klebezettel — Kachel](https://raw.githubusercontent.com/da8ter/images/main/Klebezettel%20Kachel.png)
 
 | Aktion | So geht es |
 | --- | --- |
